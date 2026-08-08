@@ -1,0 +1,125 @@
+# Project configuration consumed by AI agents (Claude, Cursor, Gemini, Codex, etc.)
+# when they encounter {{VAR_NAME}} references in skills, commands, templates and docs.
+# Variable names are snake_case; the AI maps {{PROJECT_NAME}} -> project.project_name lexically.
+# Edit values manually, or run `bun run agents:setup` for an interactive walkthrough.
+# Every unfilled field is `null` plus a TODO comment with a concrete example.
+
+project:
+  project_name: agentic-qa-simpliroute
+  project_key: null # TODO: Project key in issue tracker (e.g. PROJ, ACME, UPEX). The boilerplate ships this `null` on purpose — the consumer project fills it; never hardcode a real key here.
+  webapp_domain: null # TODO: Domain of the web application under test (e.g. myproject.com)
+
+backend:
+  backend_repo: null # TODO: Relative path to backend repository (e.g. ../my-backend)
+  backend_stack: null # TODO: Backend technology stack (e.g. Node.js + Express)
+  backend_entry: null # TODO: Backend source entry point (e.g. src/)
+
+frontend:
+  frontend_repo: null # TODO: Relative path to frontend repository (e.g. ../my-frontend)
+  frontend_stack: null # TODO: Frontend technology stack (e.g. React + TypeScript)
+  frontend_entry: null # TODO: Frontend source entry point (e.g. src/)
+
+database:
+  db_type: null # TODO: Database engine (e.g. PostgreSQL)
+
+issue_tracker:
+  issue_tracker: null # TODO: Issue tracking tool (e.g. Jira)
+  issue_tracker_cli: null # TODO: CLI command to query tickets (e.g. acli (Jira) / gh issue (GitHub))
+  atlassian_url: null # TODO: Atlassian site base URL (e.g. https://company.atlassian.net) — same value as .env's ATLASSIAN_URL
+
+testing:
+  default_env: null # TODO: Default testing environment — must match a key under `environments:` (e.g. staging)
+  tms_cli: null # TODO: Test management CLI command (e.g. bun xray)
+
+qa:
+  formal_blocked_gate: true # When true and the substrate exposes a `blocked` story status, FAILED stories dispatch `defect_reported` (in_test -> blocked). When false (or no `blocked` slug), the skill leaves the story in `in_test` with the linked bug — non-strict fallback. See sprint-testing/references/sprint-orchestration.md Briefing 4 Step 5.
+  # QA process epics — buckets that hold QA artifacts so they never pollute product epics/roadmap.
+  # FOUR QA-process epics form the QA-governance cluster: Test Plans parent to `master_test_plan_epic`;
+  # Test (TC) issues parent to `test_repository_epic`; Test Executions/Preconditions/Test Sets parent to
+  # `test_artifacts_epic`; Bug/Defect/Improvement parent to `defect_epic`.
+  # Skills resolve the epic by NAME (the methodology convention shipped below) and find-or-create it,
+  # caching the discovered `*.key` here. NEVER parent a quality issue to a product/dev epic.
+  # Read directly by skills (not {{VAR}} tokens) → skipped by vars:check, like git_strategy leaves.
+  # Doctrine: .claude/skills/agentic-qa-core/references/defect-management-doctrine.md (Part 4).
+  qa_epics:
+    master_test_plan_epic:
+      name: QA Master Test Plan # the MTP — parent of every Test Plan (FTP/STP/ATP); description mirrors
+      # .context/master-test-plan.md + points to the official QA repo; cross-linked to the 3 sibling QA epics
+      key: null # discovered/created at runtime, then cached here (e.g. PROJ-100)
+    test_repository_epic:
+      name: QA Test Repository # convention name; holds every Test (TC) issue
+      key: null # discovered/created at runtime, then cached here (e.g. PROJ-456)
+    test_artifacts_epic:
+      name: QA Test Artifacts # holds every Test Execution (FTR/STR/ATR), Precondition, Test Set
+      key: null # discovered/created at runtime, then cached here (e.g. PROJ-789)
+    defect_epic:
+      name: QA Defect Management # convention name; the `QA ` prefix marks a process epic, not product
+      key: null # discovered/created at runtime, then cached here (e.g. PROJ-123)
+
+# Git workflow for THIS project — the SOURCE OF TRUTH read by the git-flow-master skill
+# before any git/gh operation. Ships `null` (template): on the first git intent git-flow-master
+# OFFERS "Strategy Setup" and fills these fields (it never auto-picks). Tracked + frozen by the
+# updater (bootstrapOnly), so each project keeps its own. Filled by git-flow-master, NOT by
+# `agents:setup`. These leaves are read directly (not {{VAR}} template vars) → skipped by vars:check.
+git_strategy:
+  strategy: solo-main # null until Strategy Setup runs; then one of: solo-main | main-integration | enterprise | trunk-based | gitflow | github-flow | gitlab-flow | sdet
+  description: >
+    Single long-lived branch (main); single maintainer (this repo is the boilerplate
+    template itself). Work is committed and pushed DIRECTLY to main — never via a PR, and
+    without asking the user to confirm each push (standing authorization). Every push to
+    main is effectively a release of the template. No integration branch, no promotion
+    path, no hotfix ceremony.
+    Operational note for the AI: the GitHub ruleset "ProtectPublic" (require-PR +
+    required-signatures on main/staging/dev) is bypassed AUTOMATICALLY on `git push`
+    because the push credential is a repo/org admin — there is NO explicit bypass flag to
+    add; a plain `git push origin main` already applies it. The remote line
+    "Bypassed rule violations ... Changes must be made through a pull request" is EXPECTED
+    and harmless. Do NOT open a PR, do NOT try to satisfy the rule, do NOT ask to confirm —
+    just commit and push.
+  branches:
+    production: main # release / default branch
+    integration: null # long-lived integration branch name (e.g. staging), or null
+    ephemeral_pattern: null # on-demand trunk pattern (e.g. "test/<module>-suite" for sdet), or null
+  protected: [main] # main is the sole long-lived / release branch. Direct push is the norm; NO per-push confirm (standing authorization — see description).
+  decisions: # captured by the Strategy Setup questionnaire (Q1/Q2/Q3)
+    promote_method: n/a # ff-only | merge-commit | squash | n/a
+    feature_merge: n/a # merge-commit | squash | rebase-merge | n/a
+    hotfix_policy: n/a # branch-off-prod-backmerge | via-integration | none | n/a
+  policy: # how strictly protected branches are guarded (set by Strategy Setup Q4; defaults are safe)
+    direct_push_to_protected: allowed # forbidden | confirm | allowed (solo-main = allowed)
+    admin_bypass: true # normal flow here: the admin push credential auto-bypasses the ProtectPublic ruleset on every push (no flag needed). "Bypassed rule violations" is expected — never open a PR.
+    require_pr_reviews: 0 # null | 0 | N — min approvals before merge to a protected branch (informational)
+  branch_prefixes:
+    precedence: [feat, fix, refactor, test, docs, chore]
+    naming_with_key: '{prefix}/{ISSUE-KEY}-{kebab-slug}'
+    naming_without_key: '{prefix}/{kebab-slug}'
+  meta:
+    setup_version: 1
+    created: 2026-06-20 # YYYY-MM-DD stamped by Strategy Setup
+
+# Per-environment config. Add/remove environments freely (production, dev, qa, uat, etc.).
+# Each environment must define ALL four keys: web_url, api_url, db_mcp, api_mcp.
+# Skills referencing {{WEB_URL}} / {{API_URL}} / {{DB_MCP}} / {{API_MCP}} resolve to the
+# active environment (`testing.default_env` above, or a session override).
+# For explicit cross-env references use {{environments.<env>.<var>}} (e.g. {{environments.local.web_url}}).
+environments:
+  local:
+    web_url: null # TODO: Frontend URL for local env (e.g. http://localhost:3000)
+    api_url: null # TODO: API base URL for local env (e.g. http://localhost:3000/api)
+    db_mcp: null # TODO: MCP server name for local DB (e.g. myproject-local-db)
+    api_mcp: null # TODO: MCP server name for local API (e.g. myproject-local-api)
+  qa:
+    web_url: null # TODO: Frontend URL for qa env (e.g. https://qa.myproject.com)
+    api_url: null # TODO: API base URL for qa env (e.g. https://api-qa.myproject.com)
+    db_mcp: null # TODO: MCP server name for qa DB (e.g. myproject-qa-db)
+    api_mcp: null # TODO: MCP server name for qa API (e.g. myproject-qa-api)
+  staging:
+    web_url: null # TODO: Frontend URL for staging env (e.g. https://staging.myproject.com)
+    api_url: null # TODO: API base URL for staging env (e.g. https://api-staging.myproject.com)
+    db_mcp: null # TODO: MCP server name for staging DB (e.g. myproject-staging-db)
+    api_mcp: null # TODO: MCP server name for staging API (e.g. myproject-staging-api)
+  production:
+    web_url: null # TODO: Frontend URL for production env (e.g. https://myproject.com)
+    api_url: null # TODO: API base URL for production env (e.g. https://api.myproject.com)
+    db_mcp: null # TODO: MCP server name for production DB (e.g. myproject-production-db)
+    api_mcp: null # TODO: MCP server name for production API (e.g. myproject-production-api)
