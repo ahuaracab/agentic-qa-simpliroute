@@ -3161,6 +3161,13 @@ bun run jira:check            # verify both catalogs against the manifest</code>
                     <td><code>bun run jira:sync-issues</code></td>
                   </tr>
                   <tr>
+                    <td>
+                      Pull Notion pages into <code>.context/PBI/</code> markdown (when
+                      <code>issue_tracker: notion</code>)
+                    </td>
+                    <td><code>bun run notion:sync-issues</code></td>
+                  </tr>
+                  <tr>
                     <td>Set / reset env credentials or push <code>.env</code> to GitHub secrets</td>
                     <td><code>bun run setup --variables</code></td>
                   </tr>
@@ -3702,6 +3709,14 @@ bun run jira:check            # verify both catalogs against the manifest</code>
                     >
                   </li>
                   <li>
+                    <code>bun run notion:sync-issues</code>
+                    <span class="muted"
+                      >Registry-driven pull of Notion pages into <code>.context/PBI/</code> markdown
+                      (Modality notion — when the project adopts Notion as its issue tracker).
+                      Mirrors the same tree as <code>jira:sync-issues</code>.</span
+                    >
+                  </li>
+                  <li>
                     <code>bun run test:env:check</code>
                     <span class="muted"
                       >Validate <code>.env</code> for the active <code>TEST_ENV</code>.</span
@@ -4102,8 +4117,8 @@ bun run jira:check            # verify both catalogs against the manifest</code>
         </div>
 
         <p class="footer-meta">
-          <code>agentic-qa-boilerplate</code> · MIT License · Onboarding page v1.5 · Last updated
-          2026-06-07
+          <code>agentic-qa-boilerplate</code> · MIT License · Onboarding page v1.6 · Last updated
+          2026-08-09
         </p>
       </footer>
     </div>

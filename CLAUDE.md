@@ -185,6 +185,7 @@ Full contract: `.claude/skills/agentic-qa-core/references/skill-composition-stra
 | `acli` | `/acli` | Atlassian CLI. Resolves `[ISSUE_TRACKER_TOOL]` and `[TMS_TOOL]` (Modality jira-native). |
 | `git-flow-master` | (auto on git/PR intents) | End-to-end Git operator. Auto-detects branching strategy. Owns branch / commit / push / PR / conflict / chained-PR. |
 | `judgment-day` | `/judgment-day`, `juzgar`, `dual review` | T2 vendored from gentle-ai (Apache-2.0). Adversarial dual-judge review (2 blind judges in parallel, synthesis, fix loop, re-judge). Cited as optional gate by `/test-automation` Phase 3 + `/git-flow-master` pre-PR. Never auto-invoked. |
+| `pr-review-lead` | "review this PR", "revisa este PR", "revisá este pull request", "dame feedback de este PR", "actúa de QA lead", "haz de QA lead reviewer", "audita este pull request", "is this PR any good", "dale feedback a este trabajo de automatización", "evalúa este PR contra KATA", "cómo quedó este PR de automatización" | QA Lead / QA Architect peer review of a PR's test-automation work against KATA doctrine (this repo or an external repo via `gh`). Every finding grounded in a doctrine citation or code location. Runs a strictness preflight (Flexible / Standard / Strict) first; never posts a GitHub comment without explicit user OK. Does NOT review your own uncommitted diff, does NOT replace `/judgment-day` or `/git-flow-master`. |
 
 ### Commands (single-file utilities in `.claude/commands/`)
 
