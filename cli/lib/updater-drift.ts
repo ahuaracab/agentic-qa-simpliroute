@@ -156,7 +156,7 @@ export function buildDriftPrompt(drifted: DriftedEntry[], templateRepo: string):
   return [
     'Migrate the project-adapted files below to the latest boilerplate capabilities, surgically.',
     '',
-    'These files are intentionally NOT synced by `bun run update` because this project',
+    'These files are intentionally NOT synced by `bun run up` because this project',
     'adapted them. The boilerplate versions evolved since the last sync:',
     '',
     fileList,
@@ -176,7 +176,7 @@ export function buildDriftPrompt(drifted: DriftedEntry[], templateRepo: string):
     '',
     'BEFORE porting any config that depends on a pinned tool (e.g. allurerc.mjs depends on',
     'the `allure` devDependency), check the pinned version against the latest SAME-major',
-    '(`npm view <pkg> version` vs package.json) and offer the update first — `bun run update`',
+    '(`npm view <pkg> version` vs package.json) and offer the update first — `bun run up`',
     'appends new devDependencies but never bumps existing ones, so new config options may',
     'not exist in the locally pinned version.',
     '',
@@ -190,7 +190,7 @@ export function buildPromptFileContent(drifted: DriftedEntry[], templateRepo: st
   return [
     '# Boilerplate drift — AI migration prompt',
     '',
-    `> **AUTO-GENERATED, SINGLE-USE.** Written by \`bun run update\` on ${today}.`,
+    `> **AUTO-GENERATED, SINGLE-USE.** Written by \`bun run up\` on ${today}.`,
     '> Paste the prompt below into your AI session, then delete this file.',
     '> It is regenerated (overwritten) whenever the updater detects new upstream',
     '> changes in protected files.',

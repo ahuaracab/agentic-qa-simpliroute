@@ -158,7 +158,7 @@ Project issue type "Task" exists in <KEY> but is not declared in
 
 So a stale manifest declaring 3 work types regenerates a catalog with 3 work types, exits `0`, and reports success. The migration looks clean and the catalog is missing everything the manifest forgot to ask for. Same silent-success failure this whole command exists to prevent, entering through the input side.
 
-The manifest goes stale invisibly because **the boilerplate updater neither syncs it nor warns about it**: it sits in `bootstrapOnlyPaths` (so `bun run update` never overwrites the project's customizations) and is absent from the drift watchlist (so nothing reports that it has fallen behind). A project scaffolded from an older boilerplate can be many versions behind with zero signal.
+The manifest goes stale invisibly because **the boilerplate updater neither syncs it nor warns about it**: it sits in `bootstrapOnlyPaths` (so `bun run up` never overwrites the project's customizations) and is absent from the drift watchlist (so nothing reports that it has fallen behind). A project scaffolded from an older boilerplate can be many versions behind with zero signal.
 
 Compare against upstream before regenerating:
 

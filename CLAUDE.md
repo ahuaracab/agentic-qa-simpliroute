@@ -427,7 +427,7 @@ Git / PR work → `/git-flow-master` auto-loads. Details in `.claude/skills/git-
 
 > **Source of truth: the `git_strategy:` block in `.agents/project.yaml`.** `git-flow-master` reads it before any git/gh operation and adapts every branch / commit / push / PR / conflict-fix to the strategy declared there. NEVER define branch policy in this CLAUDE.md — edit the `git_strategy:` block.
 >
-> If `git_strategy.strategy` is **null** (the shipped template value), the strategy is UNSET: `git-flow-master` OFFERS "Strategy Setup" on the first git intent and fills the block (it never auto-picks). `.agents/project.yaml` ships as a per-project template (all `null`) and is frozen by `bun run update` (updater `bootstrapOnlyPaths`), so every project keeps its own strategy. Downstream test-automation projects typically choose `sdet` (chained suites; see `.claude/skills/git-flow-master/references/sdet-integration-trunk.md`).
+> If `git_strategy.strategy` is **null** (the shipped template value), the strategy is UNSET: `git-flow-master` OFFERS "Strategy Setup" on the first git intent and fills the block (it never auto-picks). `.agents/project.yaml` ships as a per-project template (all `null`) and is frozen by `bun run up` (updater `bootstrapOnlyPaths`), so every project keeps its own strategy. Downstream test-automation projects typically choose `sdet` (chained suites; see `.claude/skills/git-flow-master/references/sdet-integration-trunk.md`).
 
 This repository (the boilerplate itself) ships `git_strategy.strategy: null`; with a single `main` branch, `git-flow-master` operates as **`solo-main`** (single maintainer, commit + push directly to `main`). To pin it explicitly: ask git-flow-master to "set up our git strategy".
 
