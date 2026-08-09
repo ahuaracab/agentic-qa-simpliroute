@@ -6,7 +6,7 @@
 
 project:
   project_name: agentic-qa-simpliroute
-  project_key: null # TODO: No Jira yet (user has none). Set once tracker exists.
+  project_key: null # TODO: Notion database slug/name once the tracker DB is shared. Used as <KEY> in PBI paths.
   webapp_domain: null # TODO: Local dev only; set when a deployed domain exists.
   artifact_language: es # Deliverables (reports, .context/ docs, test plans, PRs) are generated in this language for this project (es | en). Framework internals (skills/scripts/templates) stay English — boilerplate machinery.
 
@@ -24,9 +24,9 @@ database:
   db_type: sqlite # dev; swap for postgres in prod
 
 issue_tracker:
-  issue_tracker: null # TODO: pending (user has no Jira yet)
-  issue_tracker_cli: null # TODO: acli (Jira) once tracker exists
-  atlassian_url: null # TODO: same value as .env's ATLASSIAN_URL
+  issue_tracker: notion # user decision (2026-08-08). Resolves [ISSUE_TRACKER_TOOL] to the Notion MCP.
+  issue_tracker_cli: null # TODO: no CLI for Notion — MCP (remote+OAuth) is the primary access; REST fallback via NOTION_TOKEN (Internal Integration). See scripts/sync-notion-issues.ts.
+  atlassian_url: null # TODO: n/a for Notion — removed once Jira is fully deprecated in this repo.
 
 testing:
   default_env: local
@@ -39,7 +39,8 @@ qa:
   # Test (TC) issues parent to `test_repository_epic`; Test Executions/Preconditions/Test Sets parent to
   # `test_artifacts_epic`; Bug/Defect/Improvement parent to `defect_epic`.
   # Skills resolve the epic by NAME (the methodology convention shipped below) and find-or-create it,
-  # caching the discovered `*.key` here. NEVER parent a quality issue to a product/dev epic.
+  # caching the discovered `*.key` here (with Notion: the page ID of the epic row). NEVER parent a
+  # quality issue to a product/dev epic.
   # Read directly by skills (not {{VAR}} tokens) → skipped by vars:check, like git_strategy leaves.
   # Doctrine: .claude/skills/agentic-qa-core/references/defect-management-doctrine.md (Part 4).
   qa_epics:

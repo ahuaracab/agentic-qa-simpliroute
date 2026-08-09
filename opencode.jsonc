@@ -89,6 +89,17 @@
       "headers": {
         "Authorization": "Bearer {env:POSTMAN_API_KEY}"
       }
+    },
+    // NOTION — issue tracker (when .agents/project.yaml sets `issue_tracker: notion`).
+    // Remote + OAuth: opencode auto-detects the 401 and starts the OAuth flow
+    // (Dynamic Client Registration) on first use. Authenticate proactively with
+    // `opencode mcp auth notion`. NO credential goes here — the browser flow owns
+    // the token, stored in ~/.local/share/opencode/mcp-auth.json.
+    // Docs: https://developers.notion.com/guides/mcp/overview
+    "notion": {
+      "type": "remote",
+      "url": "https://mcp.notion.com/mcp",
+      "enabled": true
     }
   },
 

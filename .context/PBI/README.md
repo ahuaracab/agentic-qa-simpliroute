@@ -1,8 +1,24 @@
 # Product Backlog Items (PBI)
 
+> **Proyecto**: route-optimizer (Delivery Route Planner) · Última actualización: 2026-08-08 · Fase 4 (Specification).
+> **Estado del issue tracker**: **no hay tracker configurado** (`issue_tracker: null`, `project_key: null` en `.agents/project.yaml`). route-optimizer es un proyecto de ejemplo sin historias en Jira/Notion. Este README documenta el *acceso al backlog* (recipe) y las guías de formato; el mapeo real de backlog queda como **Discovery Gap** hasta que exista un tracker.
+
 Per-epic and per-story QA workspace shared by `/shift-left-testing`, `/sprint-testing`, `/test-documentation`, and `/test-automation`.
 
 > **This tree is OWNED by `scripts/sync-jira-issues.ts`.** Module = Epic (1:1). **Jira is the source of truth; every `[SYNC]` `.md` here is a read-only cache.** NEVER hand-write a Jira-mirrored file — generate the content, push it to the Jira field (or fallback comment), run the sync, then read the materialized file back. Authoritative tree + ownership rules live in `CLAUDE.md` §9.
+
+## Backlog Access Recipe (este proyecto)
+
+| Campo | Valor |
+|-------|-------|
+| PM tool | Ninguno (sin Jira / Azure DevOps / Linear / ClickUp) |
+| Project key | `{{PROJECT_KEY}}` = `null` (sin definir) |
+| Board | Ninguno |
+| Access method | N/A hasta que exista tracker |
+| Env keys requeridas | `ATLASSIAN_URL`, `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN` (solo cuando exista tracker) |
+| Sprint cadence | N/A (sin Scrum/Kanban) |
+
+**Recipe cuando exista un tracker**: resolución de `[ISSUE_TRACKER_TOOL]` → `/acli` (Jira) / `gh issue` (GitHub). Env keys en `.env` (single source of truth, sin aliases `JIRA_*`). Consultas canónicas en §Common Queries.
 
 ## Layout (canonical, Epic-centric)
 
@@ -69,3 +85,30 @@ Custom-field content (ACs, ATP/ATR, scope, business rules, comments) is **only**
 - **Prefix**: Jira project key — `{{PROJECT_KEY}}-` (declared in `.agents/project.yaml`).
 - **Names**: kebab-case for file names; `EPIC-` / `STORY-` / `DEFECT-` prefixes on folders per the canonical tree.
 - **Evidence**: `evidence/` holds ephemeral screenshots/logs (gitignored).
+
+## Common Queries
+
+> Plantillas canónicas (Jira JQL). **No ejecutables hoy**: no hay tracker configurado. Se activan cuando exista `{{PROJECT_KEY}}` y se resuelva `[ISSUE_TRACKER_TOOL]` → `/acli`.
+
+| Necesidad | JQL (Jira) | WIQL (Azure DevOps) |
+|-----------|-----------|---------------------|
+| Sprint actual listo para QA | `project = {{PROJECT_KEY}} AND sprint in openSprints() AND status = "{{jira.status.story.ready_for_qa}}"` | `State = 'Ready for Test' AND [System.IterationPath] = @CurrentIteration` |
+| Todos los bugs abiertos | `project = {{PROJECT_KEY}} AND type = Bug AND resolution = Unresolved ORDER BY priority DESC` | `Work Item Type = 'Bug' AND State <> 'Closed'` |
+| Mis tareas de testing | `project = {{PROJECT_KEY}} AND status = "{{jira.status.story.in_test}}" AND assignee = currentUser()` | `State = 'Testing' AND [System.AssignedTo] = @Me` |
+| Actualizados recientemente | `project = {{PROJECT_KEY}} AND updated >= -1d ORDER BY updated DESC` | `[Changed Date] > @Today - 1` |
+
+Pseudocódigo `[ISSUE_TRACKER_TOOL]`:
+
+```
+[ISSUE_TRACKER_TOOL] Search Issues:
+  project: {{PROJECT_KEY}}
+  query: sprint in openSprints() AND assignee = currentUser()
+```
+
+## Discovery Gaps
+
+- [ ] **Issue tracker inexistente** (`project_key: null`) — el mapeo de backlog (Step 1-3 de phase-4-specification.md) está **diferido por diseño**: se re-ejecuta cuando el usuario adopte un tracker (ver `phase-4-specification.md` §When to re-run). Registrado en `risk-assessment.md` §Blockers.
+- [ ] Workflow states / transiciones: desconocidos (sin tracker). Diagrama de estados se dibujará cuando exista (validación manual de transición requerida).
+- [ ] Required custom fields / issue types: desconocidos. Enumerar desde create-meta del tracker al adoptarse.
+- [ ] Credenciales: `ATLASSIAN_*` vacías en `.env` — solo se requieren cuando exista tracker. No hay secretos en este archivo.
+- [ ] Per-ticket PBI sync está **fuera de alcance** de la Fase 4: se materializa por `/sprint-testing` desde el tracker (Jira = source of truth), nunca autorado aquí.

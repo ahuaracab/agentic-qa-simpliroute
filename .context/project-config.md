@@ -30,7 +30,7 @@
 - Optimizer: `routing.services.optimize_all` (deterministic heuristic; OR-Tools available as dependency)
 
 ### Database
-- Type: SQLite (dev: `backend/db.sqlite3`; e2e: `backend/db.e2e.sqlite3`)
+- Type: SQLite (dev: `backend/db.sqlite3`; el e2e usaba `db.e2e.sqlite3`, eliminado 2026-08-08 — el E2E corre desde `agentic-qa-simpliroute`)
 - Provider: local file (interchangeable with Postgres per `.context/product.md`)
 - Access: direct file / DBHub MCP not configured yet (`db_mcp: null`)
 

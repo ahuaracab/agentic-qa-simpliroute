@@ -1,0 +1,343 @@
+# .agents/notion-required.yaml
+#
+# Properties the methodology requires to be present in your Notion workspace
+# (the `database:` block) and content fields it expects per work type.
+# This is the Modality-notion counterpart of `.agents/jira-required.yaml`; the
+# sync script `scripts/sync-notion-issues.ts` resolves every property LIVE from
+# the database schema (`GET /databases/{id}`) using the `name:` values declared
+# here as the authoritative property name. There is no `notion:sync-fields`
+# command — property names are directly readable, so the manifest doubles as
+# the reference and the sync resolves instead of syncing.
+#
+# Each field entry's KEY is the canonical slug — the value the methodology
+# expects to resolve via {{notion.<slug>}}. The `name:` value is the EXACT
+# Notion property name (case-sensitive) as configured on the database schema.
+# Property types are the native Notion types:
+#   title · rich_text · select · status · multi_select · people · date · url ·
+#   number · checkbox · relation · formula · rollup · unique_id ·
+#   created_time · last_edited_time · created_by · last_edited_by · files
+#
+# When adding a new skill that needs a new property, add an entry here AND
+# instruct users (via README) to create the property in their Notion database.
+#
+# Sections:
+#   required  — methodology fails without these. The sync emits UNRESOLVED
+#               fields as pointer stubs when missing.
+#   optional  — enhance the workflow but won't break it if missing.
+#   unmapped  — referenced semantically but with no concrete Notion property
+#               yet. Skills mention them as literal markers with TODO comments.
+#
+# Fallback (`fallback:` key, per field):
+#   Some properties may not exist in every Notion workspace. For any property a
+#   skill WRITES, declare a `fallback:` so the skill never blocks when it is
+#   absent — it writes the content to the fallback target instead.
+#     fallback: { target: comment, label: "Acceptance Test Plan (ATP)" }
+#   target — `comment` (default; posts a structured page comment headed
+#            `## <label>` via POST /v1/comments)
+#            or `body` (appends a heading + body block to the page).
+#   label  — the human heading used in the comment/body block.
+#   Contract: scripts/sync-notion-issues.ts emits a pointer stub for an
+#   unresolved property's dedicated .md; skills then read the fallback
+#   (comments.md / body). Fields with NO `fallback:` are PO/planning-owned
+#   (mockup, story_points, weblink) — skills read them, never author them.
+#
+# No Xray in Notion: ATP/ATR are rich_text properties on the page itself;
+# defects nest under their coverable parent via `related_defects_property`
+# (and point back via `parent_property`). There are no Test Plan / Test
+# Execution entities to discover.
+
+# ---- Structural properties (database schema roles) ----
+# The sync script + skills resolve these by ROLE, not by slug. Names must match
+# the schema exactly; a missing/renamed property degrades to the fallback.
+database:
+  title_property: Name # title — native page title property (commonly "Name")
+  item_type_property: Type # select/status — discriminates the work type when one database holds all types
+  status_property: Status # status — standard Notion/Kanban statuses (refined once the real board is shared)
+  priority_property: Priority # select
+  labels_property: Tags # multi_select
+  sprint_property: Sprint # select — sprint filter for `pull --sprint`
+  assignee_property: Assignee # people — dev owner
+  qa_assignee_property: QA Assignee # people — QA owner (doctrine: self-set, never overwrite)
+  components_property: Components # multi_select — affected product module (doctrine: mandatory)
+  parent_property: Parent # relation — child→container (Story→Epic, Defect→coverable)
+  related_defects_property: Related Defects # relation — coverable (Story/Bug/…) → its defects
+
+# Status model: standard Notion/Kanban set (No status, Not started, In
+# progress, Done). Notion has no transition graph — status changes are direct
+# property edits. Refine this block once the real board is shared; until then
+# skills use the Kanban defaults and never assume custom statuses.
+
+required:
+  # ---- Story / User-story fields (consumed by scripts/sync-notion-issues.ts) ----
+  acceptance_criteria:
+    name: Acceptance Criteria (Gherkin)
+    type: rich_text
+    fallback: { target: comment, label: Acceptance Criteria }
+    description: Gherkin-formatted acceptance criteria attached to user stories.
+    used_by: [sync-notion-issues]
+
+  acceptance_test_results:
+    name: Acceptance Test Results (ATR)
+    type: rich_text
+    fallback: { target: comment, label: Acceptance Test Results (ATR) }
+    description: |
+      Stores the QA test report (ATR) on the Story (Modality notion — no Xray
+      entity involved). Authored in-session and written to this property; when
+      absent it falls back to a `## Acceptance Test Results (ATR)` page comment.
+    used_by: [sprint-testing, test-documentation]
+
+  business_rules_specification:
+    name: Business Rules Specification
+    type: rich_text
+    fallback: { target: comment, label: Business Rules Specification }
+    description: Business rules tied to a user story, separate from acceptance criteria.
+    used_by: [sync-notion-issues]
+
+  scope:
+    name: Scope
+    type: rich_text
+    fallback: { target: comment, label: Scope }
+    description: In-scope items only — what the story IS expected to deliver. Exclusions live in the separate `out_of_scope` property.
+    used_by: [sync-notion-issues]
+
+  out_of_scope:
+    name: Out Of Scope
+    type: rich_text
+    fallback: { target: comment, label: Out Of Scope }
+    description: Explicit exclusions from the story scope — what this story is NOT going to deliver. Complementary to `scope`.
+    used_by: [sync-notion-issues]
+
+  mockup:
+    name: Mockup
+    type: url
+    description: Link of the design mockup for the story.
+    used_by: [sync-notion-issues]
+
+  workflow:
+    name: Workflow
+    type: rich_text
+    fallback: { target: comment, label: Workflow }
+    description: User journey / workflow narrative for the story.
+    used_by: [sync-notion-issues]
+
+  story_points:
+    name: Story Points
+    type: number
+    description: Agile estimate for the story (planning poker).
+    used_by: [sync-notion-issues]
+
+  weblink:
+    name: Weblink
+    type: url
+    description: External reference URL attached to the story.
+    used_by: [sync-notion-issues]
+
+  # ---- Epic + Story planning fields (Dev/QA) — referenced by scripts/sync-notion-issues.ts
+  # and materialized as per-field .md files. Shared with the dev boilerplate so a single
+  # Notion workspace serves both repos; absent properties degrade to a sync stub. ----
+  feature_test_plan:
+    name: Feature Test Plan (QA)
+    type: rich_text
+    fallback: { target: comment, label: Feature Test Plan (QA) }
+    description: |
+      Epic-level QA test plan (strategy + coverage approach for the whole feature/epic).
+      Authored by sprint-testing/feature-test-planning, written to this property, then synced
+      to `.context/PBI/epics/EPIC-<KEY>-<slug>/feature-test-plan.md`.
+    used_by: [sprint-testing, sync-notion-issues]
+
+  feature_implementation_plan:
+    name: Feature Implementation Plan (Dev)
+    type: rich_text
+    fallback: { target: comment, label: Feature Implementation Plan (Dev) }
+    description: |
+      Epic-level technical implementation plan (Dev side). Cross-repo property shared with the
+      dev boilerplate; the QA sync materializes it as `feature-implementation-plan.md` when present.
+    used_by: [sync-notion-issues]
+
+  spec_implementation_plan:
+    name: Spec Implementation Plan (Dev)
+    type: rich_text
+    fallback: { target: comment, label: Spec Implementation Plan (Dev) }
+    description: |
+      Story-level technical implementation plan (Dev side). Cross-repo property shared with the
+      dev boilerplate; the QA sync materializes it as `implementation-plan.md` when present.
+    used_by: [sync-notion-issues]
+
+  # ---- Bug / Defect fields (consumed by scripts/sync-notion-issues.ts + sprint-testing reporting) ----
+  actual_result:
+    name: Actual Result
+    type: rich_text
+    fallback: { target: comment, label: Actual Result }
+    description: Observed behavior captured during bug repro.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  expected_result:
+    name: Expected Result
+    type: rich_text
+    fallback: { target: comment, label: Expected Result }
+    description: Expected behavior per acceptance criteria, contrasted against the bug.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  error_type:
+    name: Error Type
+    type: select
+    fallback: { target: comment, label: Error Type }
+    options: [content, crash, data, functional, integration, performance, security, visual]
+    description: Bug taxonomy by error category.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  severity:
+    name: Severity
+    type: select
+    fallback: { target: comment, label: Severity }
+    options: [critica, mayor, menor, moderada, trivial]
+    description: Bug severity classification (impact-based).
+    used_by: [sync-notion-issues, sprint-testing]
+
+  test_environment:
+    name: Test Environment
+    type: select
+    fallback: { target: comment, label: Test Environment }
+    options: [dev, production, qa, staging, uat]
+    description: Environment where the bug was reproduced or where the test ran.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  root_cause:
+    name: Root Cause
+    type: select
+    fallback: { target: comment, label: Root Cause }
+    options:
+      - code_error
+      - configuration_error
+      - data_error
+      - infrastructure_error
+      - integration_error
+      - requirement_error
+      - third_party_error
+      - working_as_designed
+    description: Post-mortem cause classification, set after the fix.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  workaround:
+    name: Workaround
+    type: rich_text
+    fallback: { target: comment, label: Workaround }
+    description: Temporary mitigation steps to unblock users until the fix ships.
+    used_by: [sync-notion-issues, sprint-testing]
+
+  evidence:
+    name: Evidence
+    type: rich_text
+    fallback: { target: comment, label: Evidence }
+    description: Bug evidence — screenshots, traces, logs, repro recordings (as markdown image/link lines).
+    used_by: [sync-notion-issues, sprint-testing]
+
+  fix:
+    name: Fix
+    type: select
+    fallback: { target: comment, label: Fix }
+    options: [bugfix, hotfix]
+    description: Type of fix applied (bugfix vs urgent hotfix).
+    used_by: [sync-notion-issues, sprint-testing]
+
+  # ---- TMS Modality notion (no Xray — ATP/ATR are plain rich_text properties) ----
+  acceptance_test_plan:
+    name: Acceptance Test Plan (ATP)
+    type: rich_text
+    fallback: { target: comment, label: Acceptance Test Plan (ATP) }
+    description: |
+      Stores the QA Acceptance Test Plan body on the Story itself (Modality notion).
+      Authored in-session and written to this property; when absent it falls back to
+      a `## Acceptance Test Plan (ATP)` page comment.
+    used_by: [sprint-testing, test-documentation]
+
+optional:
+  # Fields that enhance the workflow but won't break it if missing.
+  to_be_automated:
+    name: To Be Automated (QA)
+    type: select
+    fallback: { target: comment, label: To Be Automated }
+    options: [yes, no]
+    description: Whether the Test should be automated (ROI verdict from test-documentation).
+    used_by: [test-documentation]
+
+# Special markers — properties the methodology expects to exist semantically but
+# that haven't been mapped to a real Notion property yet. The sync treats these
+# as informational (not errors). When a real property is configured, move the
+# entry to `required:` above and update the corresponding skill files to use
+# {{notion.<slug>}} instead of the literal marker.
+unmapped:
+# (No unmapped slugs at this time. See README §5.3 for the unmapped pattern
+# — declare a slug here when the methodology expects a property semantically but
+# no real Notion property exists yet, then promote it to `required:` once configured.)
+
+# Work-item types (`work_types`) — the registry the sync script uses to route
+# coverage and materialize `.context/PBI/` folders. Keyed by `notion_item_type`
+# (the value of the `item_type_property` select on the page). Notion has no
+# transition graph, so no required_statuses/required_transitions blocks here —
+# statuses are the standard Notion/Kanban set on `database.status_property`.
+work_types:
+  story:
+    notion_item_type: Story
+    description: User story / feature work item
+    sync: default
+    coverable: true
+    content: split
+    used_by: [sync-notion-issues, sprint-testing, test-documentation, project-discovery]
+
+  bug:
+    notion_item_type: Bug
+    description: Defect / bug work item
+    sync: default
+    coverable: true
+    content: single
+    local_dir: bugs
+    used_by: [sync-notion-issues, sprint-testing]
+
+  epic:
+    notion_item_type: Epic
+    description: Epic / feature container (holds child stories)
+    sync: default
+    container: true
+    content: split
+    local_dir: epics
+    used_by: [sync-notion-issues, project-discovery]
+
+  defect:
+    notion_item_type: Defect
+    description: Defect found during QA of a coverable issue (story / bug / etc.)
+    sync: discovery
+    coverable: true
+    content: single
+    local_dir: defects
+    used_by: [sync-notion-issues, sprint-testing]
+
+  improvement:
+    notion_item_type: Improvement
+    description: Improvement / enhancement work item
+    sync: optional
+    recommended: true
+    coverable: true
+    content: single
+    local_dir: improvements
+    used_by: [sync-notion-issues, sprint-testing]
+
+  tech_story:
+    notion_item_type: Tech Story
+    description: Technical story (same coverage shape as a user story)
+    sync: optional
+    recommended: true
+    coverable: true
+    content: auto
+    local_dir: tech-stories
+    used_by: [sync-notion-issues, sprint-testing]
+
+  tech_debt:
+    notion_item_type: Tech Debt
+    description: Technical debt work item (coverable like a story)
+    sync: optional
+    recommended: true
+    coverable: true
+    content: auto
+    local_dir: tech-debts
+    used_by: [sync-notion-issues, sprint-testing]

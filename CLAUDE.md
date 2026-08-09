@@ -130,6 +130,7 @@ Example: ❌ "Added `waitForResponse('**/api/auth/login')` before toast assertio
 | Git / PR work | any git intent | `/git-flow-master` (auto) | `git status`, `git log` | `git` + `gh` |
 | Browser action | "screenshot", "trace", "record" | `/playwright-cli` | — | Playwright CLI |
 | Jira / Xray operation | "Jira issue", "Xray import" | `/acli` or `/xray-cli` | `.agents/jira-required.yaml`, `.agents/jira-fields.json` | CLI |
+| Notion tracker operation | "Notion page", "update Notion", "query the board" | Notion MCP (`mcp__notion__...`) | `.agents/project.yaml` (issue_tracker: notion) | Notion MCP |
 | Any script / build / test command question | "what command runs X", "how do I run tests" | — | **READ `package.json` FIRST** | — |
 
 **Key paths**:
@@ -208,6 +209,7 @@ Full contract: `.claude/skills/agentic-qa-core/references/skill-composition-stra
 | DBHub | DB queries, data validation | `[DB_TOOL]` primary |
 | Context7 | Library official docs ("how to use X") | `[DOCS_TOOL]` primary. **MANDATORY** for any library / framework / SDK / API / CLI doc lookup (React, Next, Playwright, Prisma, Tailwind, Express, etc.). PREFER OVER built-in `WebSearch` / `WebFetch` — Context7 returns current versioned docs; built-in web search returns stale blog posts. |
 | Tavily | Community solutions ("how to solve X"), troubleshooting, non-doc web research | `[WEB_SEARCH_TOOL]` primary. **MANDATORY** for any general web search — community fixes, error message lookups, "how to solve X". PREFER OVER built-in `WebSearch` / `WebFetch` — Tavily returns ranked + summarized results; built-in is shallower. |
+| Notion | Issue tracker (story / bug / epic) when `issue_tracker: notion` | `[ISSUE_TRACKER_TOOL]` primary. Remote + OAuth — no token in config; browser flow owns the credential. Auth: `opencode mcp auth notion`. REST fallback: `NOTION_TOKEN` (Internal Integration). See `docs/mcp/` |
 
 ---
 
@@ -217,7 +219,7 @@ Full contract: `.claude/skills/agentic-qa-core/references/skill-composition-stra
 
 | Tag | Domain | Primary | Fallback |
 |---|---|---|---|
-| `[ISSUE_TRACKER_TOOL]` | Jira Cloud (story / bug / epic) | `/acli` | MCP Atlassian (opt-in — see docs/mcp/) |
+| `[ISSUE_TRACKER_TOOL]` | Jira Cloud (story / bug / epic) — OR Notion when `issue_tracker: notion` | **notion**: Notion MCP (`mcp__notion__...`). **jira**: `/acli` | **notion**: REST API (`curl`, token via `NOTION_TOKEN`) / manual. **jira**: MCP Atlassian (opt-in — see docs/mcp/) |
 | `[TMS_TOOL]` | Test management | Modality jira-xray: `/xray-cli`. Modality jira-native: `/acli` | MCP Atlassian (opt-in — see docs/mcp/) |
 | `[AUTOMATION_TOOL]` | Browser automation | `/playwright-cli` | MCP Playwright |
 | `[DB_TOOL]` | Database | DBHub MCP | Supabase MCP / raw SQL |
@@ -225,11 +227,12 @@ Full contract: `.claude/skills/agentic-qa-core/references/skill-composition-stra
 | `[DOCS_TOOL]` | Library / framework / SDK / API / CLI official docs | Context7 MCP (`mcp__context7__resolve-library-id` → `mcp__context7__query-docs`) | built-in `WebSearch` / `WebFetch` (last resort only) |
 | `[WEB_SEARCH_TOOL]` | General web search, community fixes, troubleshooting, non-doc research | Tavily MCP (`mcp__tavily__tavily_search` / `tavily_extract` / `tavily_research`) | built-in `WebSearch` / `WebFetch` (last resort only) |
 
-> **Reads-vs-writes carve-out**: the `[ISSUE_TRACKER_TOOL]` / `[TMS_TOOL]` rows resolve to the WRITE / transition / link / trivial-lookup tool. DETAILED CONTENT reads (custom fields, ACs, ATP/ATR, comments) instead route through `bun run jira:sync-issues get <KEY> --include-comments` / `jql "<query>"` — read the synced `.md` (`acli view` returns null for `customfield_*`). Traceability link-graph + Xray run status stay on `/acli` / `/xray-cli`. See §9 and `agentic-qa-core/references/acli-integration.md`.
+> **Reads-vs-writes carve-out**: the `[ISSUE_TRACKER_TOOL]` / `[TMS_TOOL]` rows resolve to the WRITE / transition / link / trivial-lookup tool. DETAILED CONTENT reads (custom fields, ACs, ATP/ATR, comments) instead route through the sync script — `bun run jira:sync-issues get <KEY> --include-comments` / `jql "<query>"` (Jira) or `bun run notion:sync-issues` (Notion, when present) — read the synced `.md` (`acli view` returns null for `customfield_*`). Traceability link-graph + Xray run status stay on `/acli` / `/xray-cli`. See §9 and `agentic-qa-core/references/acli-integration.md`.
 
 **MANDATORY**: LOAD owning skill BEFORE invoking its tool. Skills = WHEN/WHAT. HOW (syntax, flags, auth, errors) lives in skill's `references/`.
 
-- Before any `[ISSUE_TRACKER_TOOL] ...` → load `/acli`
+- Before any `[ISSUE_TRACKER_TOOL] ...` Modality notion → load the Notion MCP tools directly (`mcp__notion__...`; MCP self-documents — no skill load). REST fallback: `curl` with `NOTION_TOKEN`.
+- Before any `[ISSUE_TRACKER_TOOL] ...` Modality jira → load `/acli`
 - Before any `[TMS_TOOL] ...` Modality jira-xray → load `/xray-cli`
 - Before any `[TMS_TOOL] ...` Modality jira-native → load `/acli`
 - Before any `[AUTOMATION_TOOL] ...` → load `/playwright-cli`
@@ -303,11 +306,11 @@ Project values live in **`.agents/project.yaml`** — load once per session, cac
 
 ## 9. LOCAL CONTEXT (PBI)
 
-> **`.context/PBI/` layout is OWNED by `scripts/sync-jira-issues.ts`.** Module = Epic (1:1). Jira is the source of truth; local `.md` files are a **read-only cache**. NEVER hand-write a Jira-mirrored file — generate content, push it to the Jira field (or fallback), then run the sync. Skill-authored NON-Jira files live INSIDE the same folders.
+> **`.context/PBI/` layout is OWNED by the issue-tracker sync script** — `scripts/sync-jira-issues.ts` (Modality jira) or `scripts/sync-notion-issues.ts` (Modality notion, when the project adopts Notion). The tracker is the source of truth; local `.md` files are a **read-only cache**. NEVER hand-write a tracker-mirrored file — generate content, push it to the tracker field (or fallback), then run the sync. Skill-authored NON-tracker files live INSIDE the same folders.
 
-> **QA-process parenting (3-axis model).** In Jira, every `bug` / `defect` / `improvement` parents to the QA process epic **"QA Defect Management"** (every `Test` issue to **"QA Test Repository"**, every **Test Plan** FTP/STP/ATP to **"QA Master Test Plan"** — itself an Epic, not a Test Plan work type — and every **Test Execution** FTR/STR/ATR + Precondition + Test Set to **"QA Test Artifacts"**) — NEVER a product/dev epic. Traceability to the source Story is carried by an **issue-link**, and the affected product area by **components** — three separate axes (parent = QA bucket · link = source Story · components = product module). Canon: `agentic-qa-core/references/defect-management-doctrine.md`.
+> **QA-process parenting (3-axis model).** In the issue tracker, every `bug` / `defect` / `improvement` parents to the QA process epic **"QA Defect Management"** (every `Test` issue to **"QA Test Repository"**, every **Test Plan** FTP/STP/ATP to **"QA Master Test Plan"** — itself an Epic, not a Test Plan work type — and every **Test Execution** FTR/STR/ATR + Precondition + Test Set to **"QA Test Artifacts"**) — NEVER a product/dev epic. Traceability to the source Story is carried by an **issue-link** (Jira) / **relation** (Notion), and the affected product area by **components** (Jira) / **property** (Notion) — three separate axes (parent = QA bucket · link = source Story · components = product module). Canon: `agentic-qa-core/references/defect-management-doctrine.md`.
 
-**Canonical tree** (Epic-centric; `<KEY>` = Jira key, `<slug>` from summary):
+**Canonical tree** (Epic-centric; `<KEY>` = tracker key — Jira key or Notion page slug, `<slug>` from summary):
 
 ```
 .context/PBI/
@@ -341,16 +344,16 @@ Project values live in **`.agents/project.yaml`** — load once per session, cac
 
 **Default `pull` scope = Epics + Stories + Bugs** (+ optional `--types` / `JIRA_SYNC_TYPES`). **Coverable** types (Story, Bug, Defect, Improvement, Tech Story, Tech Debt) each get their OWN folder: body md + `acceptance-test-plan.md` + `acceptance-test-results.md` + `test-executions/` (only when >1 Execution linked) + nested `defects/`. **ATP/ATR precedence** (items-first — a **Test Plan** item for ATP / **Test Execution** item for ATR by excellence; the Story custom field is fallback only): linked Xray Test Plan desc (ATP) / Test Execution / Re-Test Execution desc (ATR, newest wins) OVERRIDE the Story custom-field copy → else issue field → else Jira comment (only `--include-comments`) → else silent. Sync emits end-of-run **traceability WARNINGS** for ATP/ATR linked via the wrong link type, atypical Defect links, and orphan Defects with no coverable parent.
 
-**`[SYNC]` files = forbidden to hand-write** (overwritten on every sync — NO file is hard-protected; Jira is the source of truth). **Rule of thumb**: file mirrors a Jira/Xray field → read the synced copy, never author it locally. File holds info NOT in Jira (session notes, specs, ATC, roadmaps, evidence) → author it locally as usual.
+**`[SYNC]` files = forbidden to hand-write** (overwritten on every sync — NO file is hard-protected; the tracker is the source of truth). **Rule of thumb**: file mirrors a tracker field → read the synced copy, never author it locally. File holds info NOT in the tracker (session notes, specs, ATC, roadmaps, evidence) → author it locally as usual.
 
 **DETAILED READS via the script** (replaces `acli view` for custom fields):
-- `bun run jira:sync-issues get <KEY> --include-comments` → one issue, ALL custom fields + comments → read the generated `.md`.
-- `bun run jira:sync-issues jql "<query>"` → batch. `pull --epic <KEY>` / `--story <KEY>` → scoped. New flags: `--sprint <active|current|closed|>=N|7,8,10>` (sprint filter), `--types <csv>` (extra coverable types), `--no-defects` (skip defect discovery), `--project <KEY>` (override key). Env defaults: `JIRA_SYNC_SPRINTS`, `JIRA_SYNC_TYPES` (flag > env > default).
+- Modality jira: `bun run jira:sync-issues get <KEY> --include-comments` → one issue, ALL custom fields + comments → read the generated `.md`. `jql "<query>"` → batch. `pull --epic <KEY>` / `--story <KEY>` → scoped. New flags: `--sprint <active|current|closed|>=N|7,8,10>` (sprint filter), `--types <csv>` (extra coverable types), `--no-defects` (skip defect discovery), `--project <KEY>` (override key). Env defaults: `JIRA_SYNC_SPRINTS`, `JIRA_SYNC_TYPES` (flag > env > default).
+- Modality notion: `bun run notion:sync-issues` (once the Notion sync script ships) → mirrors the same tree from `NOTION_DATABASE_ID` / `NOTION_DATABASE_BUGS_ID`.
 - Traceability (link graph Story↔ATP↔ATR↔TC) + Xray run status STAY on `acli`/`xray-cli` — the script only mirrors field content.
 
-**FALLBACK**: if a custom field a skill must fill is absent from the instance, the skill writes the content as a structured Jira comment (`## <label>`) per `.agents/jira-required.yaml` → `fallback:`. The sync then emits a pointer stub for that field's `.md`. Never block on a missing field.
+**FALLBACK**: if a custom field a skill must fill is absent from the instance, the skill writes the content as a structured tracker comment (`## <label>`) per `.agents/jira-required.yaml` → `fallback:` (Jira) or the Notion page-comment equivalent. The sync then emits a pointer stub for that field's `.md`. Never block on a missing field.
 
-**ENTRY POINT**: invoke `/sprint-testing` — syncs the ticket (`jira:sync-issues get`), explains story, loads the synced PBI, explores code.
+**ENTRY POINT**: invoke `/sprint-testing` — syncs the ticket (Modality jira: `jira:sync-issues get`; Modality notion: Notion MCP query), explains story, loads the synced PBI, explores code.
 
 **RESUME SESSION**: invoke `/test-automation`. Skill reads `PROGRESS.md` + `ROADMAP.md` automatically, picks up where left off.
 
@@ -533,5 +536,19 @@ Assessment Date: 2026-08-08
 - [ ] Sin OpenAPI publicado → se cubre post-discovery (gap registrado, pendiente de `/business-api-map`)
 
 > Infra corregida 2026-08-08 para reflejar la remoción de Playwright del target (docs stale). Gate de salida Fase 3 pendiente de confirmación del usuario.
+
+---
+
+## Phase 4 Progress - Specification
+
+- [x] `.context/PBI/README.md` — recipe de backlog actualizado al caso real (sin tracker: `project_key: null`), Common Queries JQL/WIQL plantillas, Discovery Gaps
+- [x] `.context/PBI/templates/user-story.md` — formato canónico (role/action/benefit + AC Given/When/Then + AC checklist)
+- [x] `.context/PBI/templates/bug-report.md` — formato canónico (entorno, pasos, esperado/actual, evidencia, guía de severidad)
+- [x] `.context/PBI/templates/test-plan.md` — formato canónico (AC→TC mapping, tipos de prueba, entornos, TC con prioridad/automatizable)
+- [x] Discovery Gaps en los 4 outputs (sin credenciales; env-var references solo)
+- [ ] **Backlog mapping = Discovery Gap por diseño**: no hay issue tracker (`issue_tracker: null`). Se re-ejecuta la fase cuando el usuario adopte uno (re-run trigger en `phase-4-specification.md` §When to re-run)
+- [ ] Per-ticket PBI sync fuera de alcance: se materializa por `/sprint-testing` desde el tracker, no autorado localmente
+
+> Fase 4 parcial por diseño: solo format-reference guides + recipe de acceso (sin mapeo de backlog). Exit gate pendiente de confirmación del usuario.
 
 
