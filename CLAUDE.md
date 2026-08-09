@@ -19,7 +19,7 @@
 11. **SCRIPTS = READ `package.json` DIRECTLY**. NEVER quote test/build commands from this file or any doc — drift kills. Open `package.json` first, then answer.
 12. **KATA MANIFEST = SOURCE OF TRUTH**. `kata-manifest.json` (root) is authoritative registry of every existing Component + ATC. Before proposing new `Page`, `Api`, `Steps` module, or `@atc('PROJ-XXX')` ID — MUST load `kata-manifest.json` and check it. Anti-duplication gate. Stale manifest blocks commits via `.husky/pre-commit`. Regenerate: `bun run kata:manifest`. Validate: `bun run kata:manifest:check`.
 13. **DEFAULT COMMUNICATION MODE — CAVEMAN**: If `caveman` skill installed user-level (`~/.claude/skills/caveman/`), respond caveman level `full` by default (drop articles, fillers, pleasantries; fragments OK; technical terms exact; code/commits/PRs/security warnings always write normal English — caveman built-in boundary). Revert verbose ONLY when user explicitly say "normal mode", "habla normal", "stop caveman", "speak normally", "be verbose", "más detallado" or clear semantic equivalent. If caveman skill not installed, rule = no-op.
-14. **LANGUAGE DETECTION + MIRRORING**: At start of every conversation, READ FULL USER MESSAGE (not just opening words) to detect user's working language. Mirror that language in ALL conversational replies (questions, summaries, explanations, status updates). Repo artifacts ALWAYS English regardless of conversation language: code, code comments, commits, PR titles + bodies, branch names, file names, test names, configuration values, + any external action artifact (Jira issues/comments, GitHub issues/PRs/comments, Slack messages, emails, deploy notes, MCP tool inputs). Override: if user explicitly request another language for specific artifact ("crea el ticket en español", "write this PR description in Spanish"), honor that request only for that artifact + continue defaulting to English for next ones unless re-requested.
+14. **LANGUAGE DETECTION + MIRRORING**: At start of every conversation, READ FULL USER MESSAGE (not just opening words) to detect user's working language. Mirror that language in ALL conversational replies (questions, summaries, explanations, status updates). **Project deliverables follow `project.artifact_language` in `.agents/project.yaml`** (`es` for this project): reports, `.context/` discovery docs, test plans/results, PR descriptions and commits for project work are generated in that language regardless of repo-convention English. **Framework internals ALWAYS English** regardless of `artifact_language` or conversation language: skills, skill references, templates, scripts, config files (`CLAUDE.md`, `.claude/skills/`, `.agents/`, `package.json`, YAML/JSON configs) — these are boilerplate machinery, not deliverables, and must stay portable. Override: if user explicitly request another language for a specific artifact ("crea el ticket en español", "write this PR description in Spanish"), honor that request for that artifact + continue defaulting to `artifact_language` for next ones unless re-requested.
 15. **NO GLOBAL DISCARDS (MULTI-SESSION SAFETY)**: PROHIBITED to run repo-wide destructive git commands: `git restore .`, `git checkout -- .`, `git reset --hard`, untargeted `git stash`, `git clean -f`. Multiple agent sessions may share this working tree without worktrees — a global discard silently destroys another session's uncommitted work, unrecoverably. Discard ONLY explicit paths YOU modified in THIS session (`git restore <path>...` / `git stash push <path>...`). Unsure who modified a file → do NOT restore it — ask the user.
 
 ---
@@ -444,3 +444,81 @@ Self-check after every task: *did I make decision, fix bug, learn something non-
 ---
 
 *AI persistent memory. Update when behaviors / skills / rules change.*
+
+---
+
+## Project Assessment (Phase 1)
+
+Assessment Date: 2026-08-08
+
+### Testing Maturity: 3/4
+- Current state: Good
+- Test files: backend 7 (pytest), frontend 10 unit + 1 e2e spec
+- Frameworks: pytest + pytest-django + pytest-cov (backend), Vitest + Testing Library (frontend unit), Playwright (e2e)
+- Coverage: backend 89% (gate ≥85%), frontend 91.86% lines (gate ≥80%)
+- Re-baselined 2026-08-08: 54→60 unit tests (10 files), feature "Optimizaciones" added (list/cancel/delete), bugs fixed (migration `geometry`, double-bullet stops list, map fitBounds)
+
+### Documentation State: Good
+- README: yes
+- API docs: no (no OpenAPI published — Discovery Gap)
+- Architecture: yes (`.context/product.md`, AGENTS.md)
+- Setup guide: yes (README "Correr el proyecto")
+
+### Code Quality
+- [ ] ESLint: missing (frontend)
+- [ ] Prettier: missing
+- [ ] TypeScript: strict (frontend, `"strict": true`); n/a backend
+- [ ] Pre-commit hooks: missing
+
+### CI/CD Maturity: Good
+- `.github/workflows/qa.yml`: 3 jobs (backend pytest + coverage upload, frontend tsc+vitest+coverage, e2e Playwright con BD real reseteada). Defined but NEVER executed — repo tiene 0 commits (todo untracked).
+
+### Identified Risks
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| `backend/config/settings.py:24` SECRET_KEY hardcodeada (dev) | HIGH | Mover a env var; no desplegar con esta key |
+| `settings.py:27,29` DEBUG=True + ALLOWED_HOSTS=['*'] | HIGH | Guard-gate de producción; env-based config |
+| `settings.py:59` CORS_ALLOW_ALL_ORIGINS=True | MEDIUM | Restringir en prod |
+| CI nunca ejecutado (0 commits, todo untracked) | MEDIUM | Primer commit/push para ejercitar qa.yml |
+| Sin lint/format/pre-commit en backend ni frontend | MEDIUM | Adoptar ruff + eslint en fase post-discovery |
+| Sin OpenAPI publicado | MEDIUM | Exponer schema (drf-spectacular) para `bun run api:sync`; mientras, `/business-api-map` |
+| Docs stale (README 74 tests vs 88 reales; AGENTS 6 smoke vs 8) | LOW | Actualizar conteos en el target |
+| `settings.py:149` bloque `MAILERS` muerto/typo | LOW | Revisar en el target |
+| Sin auth en API (AllowAny) | LOW (por ahora) | Target es proyecto de ejemplo sin usuarios; `/adapt-framework` no requiere login |
+
+### Phase Prioritization
+
+- Phase 1: Normal — stack claro, docs en el target ya buenas
+- Phase 2: Normal — PRD/SRS se derivan de `.context/product.md` + código
+- Phase 3: Normal — backend/frontend bien delimitados, qa.yml como fuente de CI
+- Phase 4: Extended — sin issue tracker; solo templates (backlog mapping = Discovery Gap)
+
+### Blockers
+- [ ] Issue tracker: ninguno (sin Jira). Fase 4 backlog mapping bloqueado por diseño — registro como Discovery Gap, no bloquea phases 1-3.
+
+---
+
+## Phase 2 Progress - PRD
+
+- [x] `.context/PRD/executive-summary.md` — 5 core capabilities (≤5), cada fila con evidencia
+- [x] `.context/PRD/user-personas.md` — 2 personas, Permission Matrix, mapeo a cuentas de test (N/A sin auth)
+- [x] `.context/PRD/user-journeys.md` — 3 tablas Route Map, 4 journeys con Evidence + error paths, Discovery Gaps
+- [x] Discovery Gaps en los 3 docs PRD
+- [ ] `.context/business/business-feature-map.md` — **post-discovery** (comando `/business-feature-map`, sesión limpia según SKILL.md §Phase 2)
+
+> Re-baseline 2026-08-08: PRD refleja la base actual (feature "Optimizaciones" + fixes). Feature map difiere a post-discovery por diseño.
+
+---
+
+## Phase 2 Progress - SRS
+
+- [x] `.context/SRS/architecture.md` — System Overview, C4 Context/Container, DB schema (ER + tablas), Data Flow, External services (OSM/OSRM), Security, Performance, Discovery Gaps
+- [x] `.context/SRS/functional-specs.md` — 6 FRs (FR-001..FR-006) con EP/BVA, state machines (Optimization + RouteStop), BR summary, Discovery Gaps
+- [x] `.context/SRS/non-functional-specs.md` — 11 NFRs (performance/security/reliability/maintainability/scalability/observability), summary table, Discovery Gaps
+- [x] Discovery Gaps en los 3 docs SRS
+- [ ] API contracts: NO son output de SRS (regla phase-2-srs.md) — canonical = `api/openapi-types.ts` o `/business-api-map`; hoy no existe OpenAPI publicado → se cubre post-discovery (gap registrado)
+
+> SRS generado por reverse-engineering de la base 2026-08-08. Incluye el path OSRM+OR-Tools descubierto en `routing/services.py` (post-dates business-model) y la regla `POST /optimizations/` exige `date` (400 si falta).
+
+

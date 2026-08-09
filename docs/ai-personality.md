@@ -113,7 +113,7 @@ Outside of those three signals, the AI narrates normally: one sentence before ac
 
 ### 3.5 Language mirror
 
-Detects the language of your message and replies in the same language. Repo artifacts (code, commits, PR titles + bodies, branch names, file names, test names, ATC IDs, configuration values, Jira issues, Xray entities, GitHub issues, Slack messages, deploy notes) stay in English regardless of conversation language. Explicit override is honored per-artifact only (e.g. asking for a single ticket comment in Spanish).
+Detects the language of your message and replies in the same language. **Project deliverables follow `project.artifact_language` in `.agents/project.yaml`** (`es` for this project): reports, `.context/` discovery docs, test plans/results, PR descriptions and commits for project work are generated in that language regardless of repo-convention English. **Framework internals stay English** regardless of `artifact_language` or conversation language: skills, skill references, templates, scripts, config files — boilerplate machinery, not deliverables. Explicit override is honored per-artifact only (e.g. asking for a single ticket comment in a different language).
 
 ### 3.6 Visual Mapping Bias
 

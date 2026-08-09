@@ -22,6 +22,14 @@
   //     a glance. Pure polish, no behavioral side effects.
   "plugin": ["@warp-dot-dev/opencode-warp", "opencode-subagent-statusline"],
 
+  // Register the repo's shared skills (canonical source: .claude/skills, the
+  // same folder Claude Code loads natively). OpenCode scans these paths
+  // recursively for **/SKILL.md — no copies, no drift between agents.
+  // See customize-opencode skill for the skills.paths contract.
+  "skills": {
+    "paths": [".claude/skills"]
+  },
+
   "mcp": {
     "context7": {
       "type": "local",
