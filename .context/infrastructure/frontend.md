@@ -12,7 +12,7 @@
 | Tipo de build | — | SPA estático (sin SSR/SSG/ISR) |
 | Config dev | `frontend/vite.config.ts:6-14` | host `127.0.0.1`, proxy `/api` → `http://127.0.0.1:8000` |
 | Tests unit | `frontend/vite.config.ts:15-32` | Vitest 4 + jsdom + Testing Library, cobertura v8 |
-| Tests e2e | `frontend/playwright.config.ts` | Playwright 1.62, `e2e/`, webServer doble (Django + Vite) |
+| Tests e2e | — | **Eliminado del target (2026-08-08)** — E2E se ejecuta solo desde `agentic-qa-simpliroute` (Playwright propio, config sin webServer; el target se levanta manualmente) |
 | Monorepo | — | NO (repo de 2 carpetas `backend/` + `frontend/`, sin workspaces) |
 
 ## Build Configuration
@@ -26,7 +26,7 @@
 | TypeScript | `~6.0.2`, modo **bundler**, `strict: true`, `noEmit: true` | `package.json:21`, `tsconfig.json:11-24` |
 | JSX | `react-jsx` (runtime automático) | `tsconfig.json:8` |
 | TS target/lib | `es2023` / `ES2023 + DOM + DOM.Iterable` | `tsconfig.json:3-5` |
-| `tsconfig.include` | `["src", "vite.config.ts"]` — **`e2e/` y `playwright.config.ts` NO se type-checkean** | `tsconfig.json:25` |
+| `tsconfig.include` | `["src", "vite.config.ts"]` | `tsconfig.json:25` |
 | Build command | `tsc && vite build` (typecheck primero) | `package.json:8` |
 | Dev command | `vite` | `package.json:7` |
 | Preview | `vite preview` | `package.json:9` |
@@ -51,7 +51,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     css: false,
-    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+    exclude: ['node_modules/**', 'dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'html'],
@@ -63,19 +63,35 @@ export default defineConfig({
 })
 ```
 
-### Config Playwright — `frontend/playwright.config.ts`
+### E2E — eliminado del target
 
-- `testDir: './e2e'`, `timeout: 30s`, `workers: 1`, `fullyParallel: false`.
-- `baseURL: http://127.0.0.1:5173`; trace `on-first-retry`, video `on-first-retry`, screenshot `only-on-failure`.
-- `webServer`: (1) `python scripts/e2e_serve.py` (backend Django, BD `db.e2e.sqlite3` reseteada, cwd `../backend`); (2) `npm run dev` (Vite). Solo proyecto `chromium` (Desktop Chrome).
+> **2026-08-08**: el target ya NO tiene infraestructura E2E propia (`frontend/e2e/`, `frontend/playwright.config.ts`, `backend/scripts/e2e_serve.py`, `backend/db.e2e.sqlite3` fueron eliminados). Los E2E corren exclusivamente desde `agentic-qa-simpliroute` (repositorio QA), cuya `playwright.config.ts` **no define webServer** — el target se levanta manualmente (backend `runserver 8000` + frontend `npm run dev`) y el runner de agentic apunta a `http://127.0.0.1:8000` / `http://127.0.0.1:5173`.
+
+## Local Development Setup
+
+Recipe copy-pasteable (Windows PowerShell, flujo del README del target):
+
+```bash
+# 1. Instalar dependencias
+cd frontend
+npm install
+
+# 2. Levantar el servidor dev (proxy /api -> http://127.0.0.1:8000)
+npm run dev      # http://127.0.0.1:5173 (requiere backend en :8000)
+
+# 3. Verificar en el navegador
+#    http://127.0.0.1:5173  -> lista de vehículos, visitas, optimización de ruta
+```
+
+> El E2E no levanta el frontend: `agentic-qa-simpliroute` asume el target corriendo en `127.0.0.1:5173` (Playwright sin webServer).
 
 ## Client Environment Variables
 
-**No existe NINGUNA.** Escaneo `import.meta.env.VITE_*` / `import.meta.env` en `src/` y `e2e/`: 0 coincidencias. No hay `.env`, `.env.example`, `.env.*` en `frontend/` ni en la raíz del target.
+**No existe NINGUNA.** Escaneo `import.meta.env.VITE_*` / `import.meta.env` en `src/`: 0 coincidencias. No hay `.env`, `.env.example`, `.env.*` en `frontend/` ni en la raíz del target.
 
 | Variable | Uso | Requerida | Build/Runtime | Evidencia |
 |----------|-----|-----------|---------------|-----------|
-| (ninguna) | — | — | — | `grep import.meta.env.VITE_ src/ e2e/` → vacío; `Get-ChildItem *.env*` → vacío |
+| (ninguna) | — | — | — | `grep import.meta.env.VITE_ src/` → vacío; `Get-ChildItem *.env*` → vacío |
 
 > **Nota de integración**: la base del API está hardcodeada como relativa `API_BASE = '/api'` (`src/api.ts:14`). En dev funciona por el proxy de Vite; **en producción el host que sirva el build debe exponer `/api` (reverse proxy o mismo origen)**, porque no hay `VITE_API_URL`.
 
@@ -157,8 +173,8 @@ frontend/public/
 - **Sin `browserslist`**, sin `@babel/preset-env`, sin polyfills manuales (no hay `core-js` en `package.json`).
 - TS `target: es2023` / `lib: ES2023` (`tsconfig.json:3-5`) → el código transpilado asume navegadores modernos (es2023 + DOM).
 - Vite 8: build target por defecto (`baseline-widely-available`/modules modernos); **no verificado en config** (gap).
-- CI usa Node 20 (`qa.yml:37,64`); `package-lock.json:53` exige `^20.19.0 || ^22.12.0 || >=24`.
-- E2E: solo Chromium (`playwright.config.ts:35`); no se testea Firefox/WebKit.
+- CI usa Node 20 (`qa.yml:38`); `package-lock.json:53` exige `^20.19.0 || ^22.12.0 || >=24`.
+- E2E: sin soporte en el target; solo Chromium cubierto desde el runner de `agentic-qa-simpliroute`.
 
 ## Routing + State + Auth Integration Points
 
@@ -175,7 +191,7 @@ frontend/public/
 ### Test IDs strategy
 
 - **No hay `data-testid` en código de producción.** La única aparición es en mocks de tests unitarios (`App.test.tsx:9`, `RouteOptimizer.test.tsx:15` — `div data-testid="map"` mockeando `MapContainer`).
-- Estrategia real de selectores: **Testing Library por rol/label/texto** en unit (`getByRole`, `getByLabelText`, `getByText` — ver `VehicleForm.test.tsx:23-91`) y **Playwright por rol/label** en e2e (`getByRole`, `getByLabel`), con algunos locators de clase CSS (`.leaflet-container`, `.stops-list li`) en `e2e/pages/*.ts`.
+- Estrategia real de selectores: **Testing Library por rol/label/texto** en unit (`getByRole`, `getByLabelText`, `getByText` — ver `VehicleForm.test.tsx:23-91`). El E2E desde `agentic-qa-simpliroute` usa selectores por rol/label/texto en español, con algunos locators de clase CSS (`.leaflet-container`, `.stops-list li`).
 - Errores de UI: contrato accesible `role="alert"` (`App.tsx:83`, `RouteOptimizer.tsx:176`) — usado por los tests.
 
 ### Testing config resumen
@@ -183,14 +199,14 @@ frontend/public/
 | Nivel | Herramienta | Cobertura gate | Cómo corre |
 |-------|-------------|----------------|------------|
 | Unit/component | Vitest 4 + jsdom + @testing-library/react 16 + user-event | líneas/funciones/statements ≥80, branches ≥70 (`vite.config.ts:26-31`) | `npx vitest run` / `npx vitest run --coverage` |
-| E2E | @playwright/test 1.62, `e2e/route.spec.ts` + page objects `e2e/pages/*.ts`, BD real reseteada | — | `npx playwright test` (webServer levanta Django + Vite) |
+| E2E | No existe en el target — se ejecuta desde `agentic-qa-simpliroute` (Playwright propio, target levantado manualmente) | — | `npx playwright test` en el repo agentic |
 | Typecheck | `tsc --noEmit` (solo `src` + `vite.config.ts`) | — | `npx tsc --noEmit` |
 
 ## Discovery Gaps
 
-- [ ] **CSS de Leaflet no importado**: ni `main.tsx` ni `style.css` importan `leaflet/dist/leaflet.css` → markers/popups probablemente degradados en navegador real (el e2e usa `.leaflet-container`, no los valida visualmente). Verificar visualmente y confirmar si hay import en otra capa.
+- [ ] **CSS de Leaflet no importado**: ni `main.tsx` ni `style.css` importan `leaflet/dist/leaflet.css` → markers/popups probablemente degradados en navegador real (el e2e desde agentic usa `.leaflet-container`, no valida visualmente). Verificar visualmente y confirmar si hay import en otra capa.
 - [ ] **Sobrantes de plantilla**: `src/assets/{hero.png,typescript.svg,vite.svg}` y `public/icons.svg` no referenciados (limpieza).
-- [ ] **`e2e/` y `playwright.config.ts` excluidos del typecheck** (`tsconfig.json:25`) — el CI type-checkea solo `src` + `vite.config.ts`.
+- [ ] **Infraestructura e2e eliminada del target** (2026-08-08): `frontend/e2e/`, `frontend/playwright.config.ts`, `backend/scripts/e2e_serve.py`, `backend/db.e2e.sqlite3` y el job `e2e` de `qa.yml` fueron removidos. El E2E vive ahora solo en `agentic-qa-simpliroute`.
 - [ ] **Sin bundle analyzer / medición gzip**: tamaño por paquete (especialmente Leaflet) no verificado.
 - [ ] **Sin browserslist ni target Vite explícito**: soporte exacto de navegadores no declarado; asumido moderno (es2023).
 - [ ] **Sin Web Vitals/RUM/Lighthouse CI**: no hay métricas de rendimiento en runtime.
@@ -208,4 +224,4 @@ frontend/public/
 | Estados de optimización | Botones según estado (pending/confirmed/completed/cancelled); paradas delivered/failed | `RouteOptimizer.tsx:191-238` |
 | Selectores | Sin `data-testid` en prod → tests dependen de labels/texto en español; cambios de copy rompen tests | No hay contrato de test ids |
 | Cobertura | Gates 80/80/80/70 (l/branches) — el CI los aplica vía `vitest run --coverage` | `vite.config.ts:26-31` |
-| CI | Job `frontend`: `npm ci` → `npx tsc --noEmit` → `npx vitest run --coverage`; job `e2e`: `npm ci` → `npx playwright install --with-deps chromium` → `npx playwright test` | `.github/workflows/qa.yml:28-76` |
+| CI | Job `frontend`: `npm ci` → `npx tsc --noEmit` → `npx vitest run --coverage` | `.github/workflows/qa.yml:29-43` |

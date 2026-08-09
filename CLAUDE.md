@@ -521,4 +521,17 @@ Assessment Date: 2026-08-08
 
 > SRS generado por reverse-engineering de la base 2026-08-08. Incluye el path OSRM+OR-Tools descubierto en `routing/services.py` (post-dates business-model) y la regla `POST /optimizations/` exige `date` (400 si falta).
 
+---
+
+## Phase 3 Progress - Infrastructure
+
+- [x] `.context/infrastructure/backend.md` — Django 5.2 LTS + DRF 3.16, pip/requirements.txt, Python 3.13.3, SQLite `db.sqlite3`, 88 tests gate ≥85%, 6 env vars, auth AllowAny
+- [x] `.context/infrastructure/frontend.md` — React 19.2 + Vite 8.2 SPA CSR, TS strict, Vitest 4 + jsdom + Testing Library, 60 tests, 0 client env vars, routing=none (tabs), fetch nativo `api.ts`
+- [x] `.context/infrastructure/infrastructure.md` — qa.yml 2 jobs (backend pytest+cov, frontend tsc+vitest+cov), triggers push main + PR, nunca ejecutado, sin deploy/IaC/monitoring
+- [x] Job `e2e` de qa.yml eliminado + infraestructura Playwright del target removida (2026-08-08): E2E corre solo desde `agentic-qa-simpliroute` (Playwright propio, sin webServer, target levantado manualmente)
+- [x] Discovery Gaps en los 3 docs infra
+- [ ] Sin OpenAPI publicado → se cubre post-discovery (gap registrado, pendiente de `/business-api-map`)
+
+> Infra corregida 2026-08-08 para reflejar la remoción de Playwright del target (docs stale). Gate de salida Fase 3 pendiente de confirmación del usuario.
+
 

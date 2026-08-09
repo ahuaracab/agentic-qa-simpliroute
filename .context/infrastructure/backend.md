@@ -31,10 +31,9 @@ No existe `package.json` en `backend/` ni Makefile — los "scripts" son comando
 | `python manage.py runserver 8000` | Servidor dev en http://127.0.0.1:8000 |
 | `python manage.py migrate` | Aplica migraciones (BD dev) |
 | `python manage.py seed_demo` | Seed de demostración (100 vehículos + 1000 visitas por defecto) |
-| `python scripts/e2e_serve.py` | Levanta Django para E2E con BD dedicada reseteada (`db.e2e.sqlite3`) |
 | `python scripts/generate_sample_xlsx.py [--suffix N] [--out RUTA]` | Genera `sample_visits.xlsx` para import masivo de visitas |
 
-Fuente: `README.md:27-39,80-83`, `backend/scripts/e2e_serve.py:6-7,21,31`, `backend/vehicles/management/commands/seed_demo.py:18-22`, `backend/pytest.ini:5-8`.
+Fuente: `README.md:27-39,80-83`, `backend/vehicles/management/commands/seed_demo.py:18-22`, `backend/pytest.ini:5-8`. (`scripts/e2e_serve.py` y `db.e2e.sqlite3` fueron eliminados del target el 2026-08-08 — el E2E corre desde `agentic-qa-simpliroute`).
 
 ## Core Dependencies
 
@@ -54,7 +53,7 @@ Fuente: `README.md:27-39,80-83`, `backend/scripts/e2e_serve.py:6-7,21,31`, `back
 
 ## Environment Variables
 
-No existe `.env.example` ni `.env.template` en el repositorio (búsqueda recursiva sin hallazgo). Las variables se documentan desde `os.environ.get` en `config/settings.py` + `scripts/e2e_serve.py` + `manage.py`/`wsgi`/`asgi`. `.gitignore:28-30` ignora `.env` y `.env.local`. **No se registran valores de secretos — solo KEY + formato.**
+No existe `.env.example` ni `.env.template` en el repositorio (búsqueda recursiva sin hallazgo). Las variables se documentan desde `os.environ.get` en `config/settings.py` + `manage.py`/`wsgi`/`asgi`. `.gitignore:28-30` ignora `.env` y `.env.local`. **No se registran valores de secretos — solo KEY + formato.**
 
 ### Required
 
@@ -62,13 +61,13 @@ Ninguna variable es estrictamente requerida: el proyecto arranca con todos los d
 
 | Variable | Formato / Valor esperado | Nota |
 |----------|--------------------------|------|
-| `DJANGO_SETTINGS_MODULE` | `config.settings` | `setdefault` en `manage.py:9`, `config/wsgi.py:14`, `config/asgi.py:14`, `scripts/e2e_serve.py:22` — se auto-carga; solo se necesita si se quiere override |
+| `DJANGO_SETTINGS_MODULE` | `config.settings` | `setdefault` en `manage.py:9`, `config/wsgi.py:14`, `config/asgi.py:14` — se auto-carga; solo se necesita si se quiere override |
 
 ### Optional (tiene default)
 
 | Variable | Default | Tipo | Evidencia |
 |----------|---------|------|-----------|
-| `DJANGO_DB_NAME` | `BASE_DIR/db.sqlite3` | Ruta (string) | `settings.py:98,102` — si se define, usa ese path SQLite (E2E lo usa para `db.e2e.sqlite3`) |
+| `DJANGO_DB_NAME` | `BASE_DIR/db.sqlite3` | Ruta (string) | `settings.py:98,102` — si se define, usa ese path SQLite (históricamente el e2e usaba `db.e2e.sqlite3`; hoy el E2E vive en `agentic-qa-simpliroute` con su propio manejo de BD) |
 | `ROUTING_OSRM` | `1` | Flag ("1" → True) | `settings.py:61` — activa/desactiva el path OSRM+OR-Tools |
 | `ROUTING_OSRM_URL` | `https://router.project-osrm.org` | URL | `settings.py:62` |
 | `ROUTING_OSRM_TIMEOUT` | `5` | Float (segundos) | `settings.py:63` |
@@ -88,7 +87,7 @@ Ninguna variable es estrictamente requerida: el proyecto arranca con todos los d
 |---------|----------|-----------|
 | Tipo | SQLite (file) | `settings.py:101` (`django.db.backends.sqlite3`) |
 | Provider | Local file — intercambiable por Postgres (documentado en `.context/product.md`) | `project-config.md` §Database |
-| Archivos | `backend/db.sqlite3` (dev); `backend/db.e2e.sqlite3` (e2e, vía `DJANGO_DB_NAME`) | `settings.py:102`; `scripts/e2e_serve.py:15,21`; `.gitignore:13,26` |
+| Archivos | `backend/db.sqlite3` (dev) | `settings.py:102` |
 | ORM | Django ORM (integrado) | — |
 | Migration tool | Django migrations | `routing/migrations/` (0001 + 0002_optimizationroute_geometry), `vehicles/migrations/` (0001 + 0002), `visits/migrations/` (0001 + 0002) |
 | Seed mechanism | Custom management command `seed_demo` | `vehicles/management/commands/seed_demo.py:17-68` |
@@ -117,7 +116,7 @@ python manage.py seed_demo --vehicles 50 --visits 500   # cantidades custom
 Remove-Item db.sqlite3; python manage.py migrate; python manage.py seed_demo
 ```
 
-> E2E no usa comandos manuales: `scripts/e2e_serve.py` borra `db.e2e.sqlite3`, corre `migrate` y levanta `runserver 127.0.0.1:8000 --noreload` automáticamente (`e2e_serve.py:18-31`), invocado por `frontend/playwright.config.ts` (webServer `command`).
+> E2E: no hay scripts de e2e en el target (eliminados 2026-08-08). El backend se levanta manualmente (`python manage.py runserver 8000`) para que el runner de `agentic-qa-simpliroute` (Playwright propio, sin webServer) apunte a `127.0.0.1:8000`.
 
 ## Build Configuration
 
@@ -194,7 +193,7 @@ curl http://127.0.0.1:8000/api/vehicles/   # esperado: 200 + lista paginada
 | Comandos de test locales | Usar EXACTAMENTE `.venv/Scripts/python.exe -m pytest` (CI usa `python -m pytest` en Ubuntu). El gate de cobertura es `--cov-fail-under=85` (impuesto por `pytest.ini:5`) | Correr el subset con `-m smoke`/`-m slow` requiere `--cov-fail-under=0` para no fallar por cobertura parcial (AGENTS.md) |
 | Aislamiento OSRM en tests | `conftest.py:4-5` fuerza `settings.ROUTING_OSRM = False` (autouse) — **toda la suite unit/API corre con el path heurístico, jamás contra OSRM real** | No mockear OSRM manualmente: el fixture ya lo desactiva |
 | Marcadores | `smoke` (8 tests) y `slow` (1 test de performance) declarados en `pytest.ini:6-8` | El reporte `htmlcov/index.html` es el artifact de cobertura; CI lo sube desde `backend/htmlcov/` |
-| E2E con BD real | `scripts/e2e_serve.py` resetea `db.e2e.sqlite3` por corrida vía `DJANGO_DB_NAME` — no usar `db.sqlite3` en E2E | `playwright.config.ts` invoca `e2e_serve.py` como webServer |
+| E2E con BD real | El E2E ya no vive en el target: `scripts/e2e_serve.py` y `db.e2e.sqlite3` fueron eliminados (2026-08-08). El runner E2E es `agentic-qa-simpliroute` — el backend se levanta manualmente con `db.sqlite3` dev (o una BD separada vía `DJANGO_DB_NAME`) | `agentic-qa-simpliroute/playwright.config.ts` (sin webServer) |
 | Sin auth | La API es `AllowAny` sin autenticación — los tests de API no requieren tokens/login | Aceptado para discovery/QA (`risk-assessment.md` #9) |
 | Env para QA local | Solo si se prueba el path OSRM real: `ROUTING_OSRM=1` + `ROUTING_OSRM_URL` (timeout 5 s, máx 100 nodos) | `settings.py:61-64` |
 | Seed para QA | `python manage.py seed_demo` genera datos estables (idempotente por nombre) para pruebas con volumen | `seed_demo.py:32-33,52-53` |

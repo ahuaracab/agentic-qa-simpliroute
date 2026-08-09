@@ -10,10 +10,8 @@ graph TB
     GIT --> CI{QA workflow<br/>.github/workflows/qa.yml}
     CI --> B[Job Backend<br/>pytest + cov]
     CI --> F[Job Frontend<br/>tsc + vitest + cov]
-    CI --> E[Job E2E<br/>Playwright + BD real]
     B --> ART1[backend/htmlcov/]
     F --> ART2[frontend/coverage/]
-    E --> ART3[playwright-report/]
 ```
 
 **Estado clave**: el workflow QA está **diseñado pero nunca ejecutado** — el repo tiene 0 commits (todo untracked). No hay despliegue, ni staging/prod, ni IaC.
@@ -27,9 +25,9 @@ graph TB
 | Aspecto | Valor |
 |---------|-------|
 | Triggers | `push` a `main` + `pull_request` (cualquier PR) |
-| Runner | `ubuntu-latest` (los 3 jobs) |
-| Python | 3.13 (jobs backend y e2e) |
-| Node | 20 (jobs frontend y e2e) |
+| Runner | `ubuntu-latest` (los 2 jobs) |
+| Python | 3.13 (job backend) |
+| Node | 20 (job frontend) |
 | Caché | pip (backend), npm (frontend) |
 
 ### Jobs
@@ -38,7 +36,8 @@ graph TB
 |-----|----------|------|------------|
 | **backend** | `pip install -r backend/requirements.txt` → `cd backend && python -m pytest` | cobertura ≥85% (`pytest.ini:5`) | `backend/htmlcov/` (upload `if: always()`) |
 | **frontend** | `npm ci` → `npx tsc --noEmit` → `npx vitest run --coverage` | gates vitest (80/80/80/70) | `frontend/coverage/` (upload `if: always()`) |
-| **e2e** | `pip install -r ../backend/requirements.txt` → `npm ci` → `npx playwright install --with-deps chromium` → `npx playwright test` | todos los e2e | `frontend/playwright-report/` (upload `if: always()`) |
+
+> El job `e2e` (Playwright) fue **eliminado de `qa.yml` el 2026-08-08** — el E2E corre fuera del target, desde `agentic-qa-simpliroute`.
 
 ### Comandos CI vs comandos locales
 
@@ -69,7 +68,7 @@ graph TB
 | Var | Local | QA | Staging | Prod |
 |-----|-------|----|---------|------|
 | `DJANGO_SETTINGS_MODULE` | `config.settings` | — | — | — |
-| `DJANGO_DB_NAME` | `db.sqlite3` (dev) / `db.e2e.sqlite3` (e2e) | — | — | — |
+| `DJANGO_DB_NAME` | `db.sqlite3` (dev) | — | — | — |
 | `ROUTING_OSRM` | `1` (default) | — | — | — |
 | `ROUTING_OSRM_URL` | (default local) | — | — | — |
 | `ROUTING_OSRM_TIMEOUT` | 5 (s) | — | — | — |
@@ -96,7 +95,7 @@ graph TB
 
 | Aspecto | Valor |
 |---------|-------|
-| Provider | SQLite (dev local) — `db.sqlite3` · e2e usa `db.e2e.sqlite3` separada |
+| Provider | SQLite (dev local) — `db.sqlite3` (el e2e usaba `db.e2e.sqlite3`; eliminado del target 2026-08-08) |
 | Migrations | Django migrations (apps `vehicles`, `visits`, `routing`) |
 | Seed | `python manage.py seed_demo` (10 vehículos / 120 visitas) |
 | Region / Backups / Pooling | N/A — archivo local |
@@ -139,7 +138,7 @@ graph LR
 
 ## Discovery Gaps
 
-- [ ] Workflow QA (`qa.yml`) **nunca ejecutado** — repo con 0 commits; los gates de cobertura no están probados en CI real.
+- [ ] Workflow QA (`qa.yml`) **nunca ejecutado** — repo con 0 commits; los gates de cobertura no están probados en CI real (y el job e2e fue removido del pipeline el 2026-08-08).
 - [ ] Sin entorno de despliegue: qa/staging/prod inexistentes, sin plataforma (Vercel/Netlify/Docker/…).
 - [ ] Sin `Dockerfile` / `docker-compose.yml` → sin contenedorización.
 - [ ] Sin IaC, sin monitoring/observabilidad, sin health-check endpoint.
@@ -150,6 +149,6 @@ graph LR
 
 ## QA Relevance
 
-- **Integración de tests**: los 3 jobs de `qa.yml` ya definen dónde corren los tests QA (pytest/tsc/vitest/Playwright) — una vez que el repo tenga su primer commit, QA obtiene regresión automatizada real.
+- **Integración de tests**: los 2 jobs de `qa.yml` definen dónde corren los tests QA (pytest/tsc/vitest) — el E2E se ejecuta desde `agentic-qa-simpliroute` (Playwright propio, target levantado manualmente). Una vez que el repo tenga su primer commit, QA obtiene regresión automatizada real.
 - **Gaps que afectan a QA**: (1) sin CI ejecutado → los gates (85%/80%) son teoría hasta el primer push; (2) sin entorno qa/staging → QA solo puede testear local; (3) sin OpenAPI → contract derivado a mano (`/business-api-map` pendiente).
 - **Recomendación**: primer commit + push a `main` para ejercitar `qa.yml` y validar que los gates pasan (cierra riesgo #4 de risk-assessment).
