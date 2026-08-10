@@ -15,21 +15,17 @@
  *
  * Usage in E2E tests:
  *   test('example', async ({ test }) => {
- *     await test.ui.login.loginSuccessfully(credentials);
- *     await test.api.auth.getCurrentUser();
+ *     await test.api.vehicle.createVehicleSuccessfully(payload);
  *   });
  *
  * Usage in API-only tests:
  *   test('example', async ({ api }) => {
- *     await api.auth.authenticateSuccessfully(credentials);
+ *     await api.vehicle.listVehiclesSuccessfully();
  *   });
  */
 
-import type { ApiState } from '@data/types';
 import type { APIRequestContext, Page } from '@playwright/test';
 import type { Environment } from '@variables';
-
-import { existsSync, readFileSync } from 'node:fs';
 
 import { ApiFixture } from '@ApiFixture';
 import { test as base, expect } from '@playwright/test';
@@ -57,45 +53,6 @@ class TestFixture extends TestContext {
     const options = { page, request, environment: this.env };
     this.api = new ApiFixture(options);
     this.ui = new UiFixture(options);
-
-    // Load token from file if exists (for E2E tests with storageState)
-    this.loadTokenFromFile();
-  }
-
-  /**
-   * Load auth token from api-state.json file.
-   * Called automatically in constructor for E2E tests.
-   */
-  private loadTokenFromFile(): void {
-    const apiStatePath = config.auth.apiStatePath;
-    if (existsSync(apiStatePath)) {
-      try {
-        const content = readFileSync(apiStatePath, 'utf-8');
-        const apiState: ApiState = JSON.parse(content);
-        if (apiState.token) {
-          this.api.setAuthToken(apiState.token);
-        }
-      }
-      catch {
-        // Silently ignore - token will be null
-      }
-    }
-  }
-
-  /**
-   * Set auth token for API requests.
-   * Use this to refresh token during tests (e.g., after re-login).
-   */
-  setAuthToken(token: string): void {
-    this.api.setAuthToken(token);
-  }
-
-  /**
-   * Clear auth token.
-   * Use this to test unauthenticated scenarios.
-   */
-  clearAuthToken(): void {
-    this.api.clearAuthToken();
   }
 
   /**
@@ -165,22 +122,6 @@ export const test = base.extend<{
   // API-only fixture (NO browser opened - Playwright fixtures are lazy)
   api: async ({ request }, use) => {
     const apiFixture = new ApiFixture({ request });
-
-    // Load token from file if exists (for integration tests)
-    const apiStatePath = config.auth.apiStatePath;
-    if (existsSync(apiStatePath)) {
-      try {
-        const content = readFileSync(apiStatePath, 'utf-8');
-        const apiState: ApiState = JSON.parse(content);
-        if (apiState.token) {
-          apiFixture.setAuthToken(apiState.token);
-        }
-      }
-      catch {
-        // Silently ignore - token will be null
-      }
-    }
-
     await use(apiFixture);
   },
 });

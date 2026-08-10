@@ -1,91 +1,44 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-05-21T08:28:54.468Z",
+  "generatedAt": "2026-08-10T18:10:10.145Z",
   "components": {
     "api": [
       {
-        "name": "AuthApi",
-        "file": "AuthApi.ts",
-        "relativePath": "tests/components/api/AuthApi.ts",
+        "name": "VehicleApi",
+        "file": "VehicleApi.ts",
+        "relativePath": "tests\\components\\api\\VehicleApi.ts",
         "atcs": [
           {
-            "id": "PROJ-101",
-            "method": "authenticateSuccessfully",
-            "line": 73
+            "id": "ROUTE-201",
+            "method": "listVehiclesSuccessfully",
+            "line": 52
           },
           {
-            "id": "PROJ-102",
-            "method": "loginWithInvalidCredentials",
-            "line": 112
-          }
-        ]
-      },
-      {
-        "name": "ExampleApi",
-        "file": "ExampleApi.ts",
-        "relativePath": "tests/components/api/ExampleApi.ts",
-        "atcs": [
-          {
-            "id": "PROJ-101",
-            "method": "createResourceSuccessfully",
-            "line": 57
+            "id": "ROUTE-202",
+            "method": "createVehicleSuccessfully",
+            "line": 75
           },
           {
-            "id": "PROJ-102",
-            "method": "createResourceWithInvalidData",
-            "line": 88
+            "id": "ROUTE-203",
+            "method": "createVehicleWithInvalidData",
+            "line": 99
           },
           {
-            "id": "PROJ-103",
-            "method": "getResourceSuccessfully",
-            "line": 113
+            "id": "ROUTE-204",
+            "method": "deleteVehicleSuccessfully",
+            "line": 122
           }
         ]
       }
     ],
-    "ui": [
-      {
-        "name": "ExamplePage",
-        "file": "ExamplePage.ts",
-        "relativePath": "tests/components/ui/ExamplePage.ts",
-        "atcs": [
-          {
-            "id": "PROJ-101",
-            "method": "submitFormWithValidData",
-            "line": 99
-          },
-          {
-            "id": "PROJ-102",
-            "method": "submitFormWithInvalidEmail",
-            "line": 122
-          }
-        ]
-      },
-      {
-        "name": "LoginPage",
-        "file": "LoginPage.ts",
-        "relativePath": "tests/components/ui/LoginPage.ts",
-        "atcs": [
-          {
-            "id": "PROJ-101",
-            "method": "loginSuccessfully",
-            "line": 84
-          },
-          {
-            "id": "PROJ-102",
-            "method": "loginWithInvalidCredentials",
-            "line": 101
-          }
-        ]
-      }
-    ]
+    "ui": []
   },
   "preconditions": [],
   "summary": {
-    "totalComponents": 4,
-    "totalATCs": 9,
-    "apiComponents": 2,
-    "uiComponents": 2,
+    "totalComponents": 1,
+    "totalATCs": 4,
+    "apiComponents": 1,
+    "uiComponents": 0,
     "preconditionModules": 0
   }
 }

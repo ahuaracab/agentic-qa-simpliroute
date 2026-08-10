@@ -26,36 +26,18 @@ export interface TestCredentials {
 }
 
 // ============================================
-// Project-Specific Types (example structure)
+// Project-Specific Types (Route Optimizer)
 // ============================================
 
-export interface TestHotel {
+export interface TestVehicle {
   name: string
-  organizationId?: number
-  invoiceCap?: number
-}
-
-export interface TestBooking {
-  confirmationNumber: string
-  hotelId: number
-  stayValue: number
-  checkInDate: string
-  emailHash?: string
-}
-
-// ============================================
-// Auth/Fixture State Types
-// ============================================
-
-/**
- * Stored API state for test fixtures
- * Used by setup files and TestFixture for token propagation
- */
-export interface ApiState {
-  token: string
-  tokenType: string
-  expiresIn: number
-  refreshToken: string | null
-  source: 'ui-login' | 'api-login'
-  createdAt: string
+  capacityKg: number
+  capacityL: number
+  averageSpeedKmh: number
+  latitude: number
+  longitude: number
+  workStart: string
+  workEnd: string
+  lunchStart: string
+  lunchEnd: string
 }

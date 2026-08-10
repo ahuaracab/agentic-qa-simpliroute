@@ -17,48 +17,20 @@
 import type { TestContextOptions } from '@TestContext';
 
 import { ApiBase } from '@api/ApiBase';
-import { AuthApi } from '@api/AuthApi';
-import { ExampleApi } from '@api/ExampleApi';
+import { VehicleApi } from '@api/VehicleApi';
 
 // ============================================
 // API Fixture Class
 // ============================================
 
 export class ApiFixture extends ApiBase {
-  /** Auth component - handles login and token management */
-  readonly auth: AuthApi;
-
-  /** Example component - reference only */
-  readonly example: ExampleApi;
+  /** Vehicle component - CRUD against the public /vehicles/ API */
+  readonly vehicle: VehicleApi;
 
   constructor(options: TestContextOptions) {
     super(options);
 
     // All components receive the same options (same request context)
-    this.auth = new AuthApi(options);
-    this.example = new ExampleApi(options);
-  }
-
-  // ============================================
-  // Token Propagation to Child Components
-  // ============================================
-
-  /**
-   * Set authentication token for all API components.
-   * This ensures all components use the same token for authenticated requests.
-   */
-  override setAuthToken(token: string) {
-    super.setAuthToken(token);
-    this.auth.setAuthToken(token);
-    this.example.setAuthToken(token);
-  }
-
-  /**
-   * Clear authentication token from all API components.
-   */
-  override clearAuthToken() {
-    super.clearAuthToken();
-    this.auth.clearAuthToken();
-    this.example.clearAuthToken();
+    this.vehicle = new VehicleApi(options);
   }
 }

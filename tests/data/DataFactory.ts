@@ -9,7 +9,7 @@
  *   - Import directo: import { DataFactory } from '@DataFactory'
  */
 
-import type { TestBooking, TestCredentials, TestHotel, TestUser } from './types';
+import type { TestCredentials, TestUser, TestVehicle } from './types';
 
 import { faker } from '@faker-js/faker';
 
@@ -75,33 +75,27 @@ export class DataFactory {
   }
 
   // ============================================
-  // PROJECT-SPECIFIC (example structure)
+  // PROJECT-SPECIFIC (Route Optimizer)
   // ============================================
 
   /**
-   * Genera datos de Hotel para testing
-   * TODO: Expandir cuando se necesite
+   * Genera un vehículo válido para testing
+   * Contrato real: vehicle.types.ts (VehicleSerializer)
+   * Requeridos en el request: name, latitude, longitude
+   * @param overrides - Propiedades a sobreescribir
    */
-  static createHotel(overrides?: Partial<TestHotel>): TestHotel {
+  static createVehicle(overrides?: Partial<TestVehicle>): TestVehicle {
     return {
-      name: `Test Hotel ${faker.location.city()}`,
-      organizationId: faker.number.int({ min: 1, max: 100 }),
-      invoiceCap: faker.number.int({ min: 1000, max: 50000 }),
-      ...overrides,
-    };
-  }
-
-  /**
-   * Genera datos de Booking para testing
-   * TODO: Expandir cuando se necesite
-   */
-  static createBooking(overrides?: Partial<TestBooking>): TestBooking {
-    return {
-      confirmationNumber: `CONF-${faker.string.alphanumeric(8).toUpperCase()}`,
-      hotelId: faker.number.int({ min: 1, max: 1000 }),
-      stayValue: faker.number.float({ min: 100, max: 5000, fractionDigits: 2 }),
-      checkInDate: faker.date.future().toISOString().split('T')[0],
-      emailHash: faker.string.alphanumeric(32),
+      name: `Vehículo ${faker.location.city()} ${this.uniqueId()}`,
+      capacityKg: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
+      capacityL: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
+      averageSpeedKmh: faker.number.float({ min: 20, max: 90, fractionDigits: 1 }),
+      latitude: faker.location.latitude({ max: -33.5, min: -33.6, precision: 5 }),
+      longitude: faker.location.longitude({ max: -70.65, min: -70.7, precision: 5 }),
+      workStart: '08:00',
+      workEnd: '18:00',
+      lunchStart: '13:00',
+      lunchEnd: '14:00',
       ...overrides,
     };
   }

@@ -20,8 +20,6 @@ const baseURL = config.baseUrl;
 export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.test\.ts/,
-  // Exclude example files - they are reference templates, not functional tests
-  testIgnore: ['**/module-example/**'],
 
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
@@ -107,41 +105,22 @@ export default defineConfig({
     },
 
     // ============================================
-    // Auth Setup Projects - Run after global-setup
-    // ============================================
-    {
-      name: 'ui-setup',
-      testMatch: /ui-auth\.setup\.ts/,
-      testDir: './tests/setup',
-      dependencies: ['global-setup'],
-    },
-    {
-      name: 'api-setup',
-      testMatch: /api-auth\.setup\.ts/,
-      testDir: './tests/setup',
-      dependencies: ['global-setup'],
-    },
-
-    // ============================================
-    // E2E Tests - UI + API with authenticated session
+    // E2E Tests - UI + API (no auth: API pública AllowAny)
     // ============================================
     {
       name: 'e2e',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: config.auth.storageStatePath,
       },
       testMatch: '**/e2e/**/*.test.ts',
-      dependencies: ['ui-setup'],
     },
 
     // ============================================
-    // Integration Tests - API only with token
+    // Integration Tests - API only (no token)
     // ============================================
     {
       name: 'integration',
       testMatch: '**/integration/**/*.test.ts',
-      dependencies: ['api-setup'],
       use: {},
     },
 
@@ -153,10 +132,8 @@ export default defineConfig({
       name: 'smoke',
       grep: /@critical/,
       testMatch: '**/{e2e,integration}/**/*.test.ts',
-      dependencies: ['ui-setup', 'api-setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: config.auth.storageStatePath,
       },
     },
 

@@ -16,8 +16,6 @@
 
 import type { TestContextOptions } from '@TestContext';
 
-import { ExamplePage } from '@ui/ExamplePage';
-import { LoginPage } from '@ui/LoginPage';
 import { UiBase } from '@ui/UiBase';
 
 // ============================================
@@ -25,17 +23,7 @@ import { UiBase } from '@ui/UiBase';
 // ============================================
 
 export class UiFixture extends UiBase {
-  /** Login page component - handles authentication flows */
-  readonly login: LoginPage;
-
-  /** Example component - reference only */
-  readonly example: ExamplePage;
-
   constructor(options: TestContextOptions) {
     super(options);
-
-    // All components receive the same options (same page context)
-    this.login = new LoginPage(options);
-    this.example = new ExamplePage(options);
   }
 }
