@@ -35,12 +35,6 @@ const {
   CI, // Used: env.isCI (global.setup, KataReporter)
   BUILD_ID, // Used: env.buildId (jiraSync)
 
-  // === Test User Credentials (only current TEST_ENV required) ===
-  LOCAL_USER_EMAIL, // Required if TEST_ENV=local
-  LOCAL_USER_PASSWORD, // Required if TEST_ENV=local
-  STAGING_USER_EMAIL, // Required if TEST_ENV=staging
-  STAGING_USER_PASSWORD, // Required if TEST_ENV=staging
-
   // === TMS Configuration ===
   TMS_PROVIDER = 'xray', // Used: config.tms.provider (jiraSync) - 'xray' | 'jira'
   AUTO_SYNC = 'false', // Used: config.tms.autoSync (jiraSync, global.teardown)
@@ -87,38 +81,23 @@ export const env = {
 } as const;
 
 // ============================================
-// Test-User Credentials Mapping (variables from .env)
-// After validation, current environment credentials are guaranteed to exist
-// ============================================
-
-const userCredentialsMap: Record<Environment, { email: string, password: string }> = {
-  local: {
-    email: LOCAL_USER_EMAIL ?? '',
-    password: LOCAL_USER_PASSWORD ?? '',
-  },
-  staging: {
-    email: STAGING_USER_EMAIL ?? '',
-    password: STAGING_USER_PASSWORD ?? '',
-  },
-};
-
-// ============================================
 // ENV DATA Mapping (hardcoded - not secrets because these are not sensitive data like credentials)
+// No test-user section: the target API exposes AllowAny (no auth).
 // ============================================
 
 const envDataMap: Record<
   Environment,
-  { base: string, api: string, user: { email: string, password: string } }
+  { base: string, api: string }
 > = {
   local: {
-    base: 'http://localhost:3000',
-    api: 'http://localhost:3000/api',
-    user: userCredentialsMap.local,
+    base: 'http://127.0.0.1:5173',
+    api: 'http://127.0.0.1:8000/api',
   },
+  // staging: type-only placeholder — no hay deploy de staging; hereda local
+  // (se reemplaza por URLs reales cuando exista host, o se retira del union)
   staging: {
-    base: 'https://dojo.upexgalaxy.com',
-    api: 'https://dojo.upexgalaxy.com/api',
-    user: userCredentialsMap.staging,
+    base: 'http://127.0.0.1:5173',
+    api: 'http://127.0.0.1:8000/api',
   },
 };
 const envData = envDataMap[env.current];
@@ -131,20 +110,6 @@ export const config = {
   // URLs - selected by TEST_ENV from urlMap
   baseUrl: envData.base,
   apiUrl: envData.api,
-
-  // Authentication config (UPEX Dojo endpoints - relative to apiUrl)
-  auth: {
-    loginEndpoint: '/auth/login',
-    tokenEndpoint: '/auth/login', // Endpoint to intercept for token (used by page.waitForResponse)
-    meEndpoint: '/auth/me',
-    tokenLifetimeSeconds: 86400, // 24 hours (1 day)
-    // Storage paths for authenticated sessions
-    storageStatePath: '.auth/user.json',
-    apiStatePath: '.auth/api-state.json',
-  },
-
-  // Test User (configure in .env)
-  testUser: envData.user,
 
   // TMS
   tms: {

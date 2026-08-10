@@ -15,10 +15,6 @@ export interface EnvVarsToValidate {
   TEST_ENV: string
   AUTO_SYNC: string
   TMS_PROVIDER?: string
-  LOCAL_USER_EMAIL?: string
-  LOCAL_USER_PASSWORD?: string
-  STAGING_USER_EMAIL?: string
-  STAGING_USER_PASSWORD?: string
   XRAY_CLIENT_ID?: string
   XRAY_CLIENT_SECRET?: string
   ATLASSIAN_URL?: string
@@ -35,24 +31,9 @@ export interface EnvVarsToValidate {
 export function validateTestEnvironment(vars: EnvVarsToValidate): void {
   const errors: string[] = [];
 
-  // Validate credentials for CURRENT environment only
-  if (vars.TEST_ENV === 'local') {
-    if (!vars.LOCAL_USER_EMAIL) {
-      errors.push('LOCAL_USER_EMAIL is required for TEST_ENV=local');
-    }
-    if (!vars.LOCAL_USER_PASSWORD) {
-      errors.push('LOCAL_USER_PASSWORD is required for TEST_ENV=local');
-    }
-  }
-  else if (vars.TEST_ENV === 'staging') {
-    if (!vars.STAGING_USER_EMAIL) {
-      errors.push('STAGING_USER_EMAIL is required for TEST_ENV=staging');
-    }
-    if (!vars.STAGING_USER_PASSWORD) {
-      errors.push('STAGING_USER_PASSWORD is required for TEST_ENV=staging');
-    }
-  }
-  else {
+  // No credentials required: the target API exposes AllowAny (no auth).
+  // Only TEST_ENV itself is validated (must be a known environment).
+  if (vars.TEST_ENV !== 'local' && vars.TEST_ENV !== 'staging') {
     errors.push(`Unknown TEST_ENV: ${vars.TEST_ENV}. Valid values: local, staging`);
   }
 
@@ -96,10 +77,6 @@ if (import.meta.main) {
     TEST_ENV: process.env.TEST_ENV || 'local',
     AUTO_SYNC: process.env.AUTO_SYNC || 'false',
     TMS_PROVIDER: process.env.TMS_PROVIDER || 'xray',
-    LOCAL_USER_EMAIL: process.env.LOCAL_USER_EMAIL,
-    LOCAL_USER_PASSWORD: process.env.LOCAL_USER_PASSWORD,
-    STAGING_USER_EMAIL: process.env.STAGING_USER_EMAIL,
-    STAGING_USER_PASSWORD: process.env.STAGING_USER_PASSWORD,
     XRAY_CLIENT_ID: process.env.XRAY_CLIENT_ID,
     XRAY_CLIENT_SECRET: process.env.XRAY_CLIENT_SECRET,
     ATLASSIAN_URL: process.env.ATLASSIAN_URL,
