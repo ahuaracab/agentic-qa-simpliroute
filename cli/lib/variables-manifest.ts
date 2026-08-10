@@ -205,6 +205,26 @@ export const VAR_MANIFEST: VarSpec[] = [
     note: 'Atlassian API token. CRITICAL — Day-0 collected; sensitive.',
   },
 
+  // --- Notion (issue tracker alternative to Atlassian) ---
+  {
+    name: 'NOTION_TOKEN',
+    destinations: ['local'],
+    secret: true,
+    required: false,
+    critical: false,
+    obtainHint: 'Notion → Profile → Integrations → Internal Integration token. REST fallback for the Notion MCP + sync-notion-issues.ts (the MCP itself uses browser OAuth, no token).',
+    note: 'Notion Internal Integration token. REST fallback for the Notion MCP and sync-notion-issues.ts. Local only.',
+  },
+  {
+    name: 'NOTION_DATABASE_ID',
+    destinations: ['local'],
+    secret: false,
+    required: false,
+    critical: false,
+    obtainHint: 'Notion database ID whose pages mirror the .context/PBI/ tree (main board: stories + bugs).',
+    note: 'Notion main board database ID (stories + bugs), used by sync-notion-issues.ts. Local only.',
+  },
+
   // --- Slack (CI-only notifier) ---
   {
     name: 'SLACK_WEBHOOK_URL',

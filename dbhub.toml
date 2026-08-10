@@ -24,10 +24,7 @@
 
 [[sources]]
 id = "primary"
-type = "${DBHUB_TYPE}"
-host = "${DBHUB_HOST}"
-port = "${DBHUB_PORT}"
-database = "${DBHUB_DATABASE}"
+type = "sqlite"
+database = "../route-optimizer/backend/db.sqlite3"
 user = "${DBHUB_USER}"
 password = "${DBHUB_PASSWORD}"
-sslmode = "require"

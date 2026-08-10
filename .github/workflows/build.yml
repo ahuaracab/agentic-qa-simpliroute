@@ -14,10 +14,7 @@ on:
 
 env:
   CI: true
-  TEST_ENV: 'staging'
-  # Credentials (required to validate environment configuration)
-  STAGING_USER_EMAIL: ${{ secrets.STAGING_USER_EMAIL }}
-  STAGING_USER_PASSWORD: ${{ secrets.STAGING_USER_PASSWORD }}
+  TEST_ENV: 'local' # only local is active (no staging/qa/prod deploys yet)
 
 jobs:
   TestBuild:

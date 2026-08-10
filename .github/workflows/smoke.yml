@@ -5,7 +5,7 @@
 # Perfect for verifying app components work after deployments and releases.
 
 name: Smoke Tests
-run-name: ${{ github.actor }} triggered Smoke Tests on ${{ github.event.inputs.environment || 'staging' }}
+run-name: ${{ github.actor }} triggered Smoke Tests on ${{ github.event.inputs.environment || 'local' }}
 
 on:
   schedule:
@@ -16,11 +16,10 @@ on:
       environment:
         description: Select the Test Environment
         required: true
-        default: 'staging'
+        default: 'local'
         type: choice
         options:
           - local
-          - staging
       generate_allure:
         description: Generate Allure Report
         required: true
@@ -29,12 +28,7 @@ on:
 
 env:
   CI: true
-  TEST_ENV: ${{ github.event.inputs.environment || 'staging' }}
-  # Credentials (required for test execution)
-  LOCAL_USER_EMAIL: ${{ secrets.LOCAL_USER_EMAIL }}
-  LOCAL_USER_PASSWORD: ${{ secrets.LOCAL_USER_PASSWORD }}
-  STAGING_USER_EMAIL: ${{ secrets.STAGING_USER_EMAIL }}
-  STAGING_USER_PASSWORD: ${{ secrets.STAGING_USER_PASSWORD }}
+  TEST_ENV: ${{ github.event.inputs.environment || 'local' }}
 
 jobs:
   SmokeTest:
@@ -42,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
-      name: ${{ github.event.inputs.environment || 'staging' }}
+      name: ${{ github.event.inputs.environment || 'local' }}
 
     steps:
       - name: Checkout Repo

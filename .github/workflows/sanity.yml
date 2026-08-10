@@ -5,7 +5,7 @@
 # Useful for validating new tests in CI before merging PRs.
 
 name: Sanity Tests
-run-name: ${{ github.actor }} triggered Sanity Tests on ${{ github.event.inputs.environment || 'staging' }}
+run-name: ${{ github.actor }} triggered Sanity Tests on ${{ github.event.inputs.environment || 'local' }}
 
 on:
   workflow_dispatch:
@@ -13,11 +13,10 @@ on:
       environment:
         description: Select the Test Environment
         required: true
-        default: 'staging'
+        default: 'local'
         type: choice
         options:
           - local
-          - staging
       test_type:
         description: Select Test Type
         required: true
@@ -50,12 +49,7 @@ on:
 
 env:
   CI: true
-  TEST_ENV: ${{ github.event.inputs.environment || 'staging' }}
-  # Credentials (required for test execution)
-  LOCAL_USER_EMAIL: ${{ secrets.LOCAL_USER_EMAIL }}
-  LOCAL_USER_PASSWORD: ${{ secrets.LOCAL_USER_PASSWORD }}
-  STAGING_USER_EMAIL: ${{ secrets.STAGING_USER_EMAIL }}
-  STAGING_USER_PASSWORD: ${{ secrets.STAGING_USER_PASSWORD }}
+  TEST_ENV: ${{ github.event.inputs.environment || 'local' }}
 
 jobs:
   SanityTest:
@@ -63,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment:
-      name: ${{ github.event.inputs.environment || 'staging' }}
+      name: ${{ github.event.inputs.environment || 'local' }}
 
     steps:
       - name: Checkout Repo

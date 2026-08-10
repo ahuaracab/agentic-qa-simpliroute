@@ -6,7 +6,7 @@
 
 project:
   project_name: agentic-qa-simpliroute
-  project_key: null # TODO: Notion database slug/name once the tracker DB is shared. Used as <KEY> in PBI paths.
+  project_key: ROUTE # provisional (user decision 2026-08-10); replaceable once the Notion tracker defines the slug. Used as <KEY> in PBI paths.
   webapp_domain: null # TODO: Local dev only; set when a deployed domain exists.
   artifact_language: es # Deliverables (reports, .context/ docs, test plans, PRs) are generated in this language for this project (es | en). Framework internals (skills/scripts/templates) stay English — boilerplate machinery.
 
@@ -108,8 +108,8 @@ environments:
   local:
     web_url: http://127.0.0.1:5173
     api_url: http://127.0.0.1:8000
-    db_mcp: null # TODO: DBHub source for ../route-optimizer/backend/db.sqlite3 when enabled
-    api_mcp: null # TODO: OpenAPI MCP once an OpenAPI spec is published
+    db_mcp: dbhub # DBHub MCP — sqlite local (../route-optimizer/backend/db.sqlite3)
+    api_mcp: null # openapi MCP disabled — facades hand-written (no spec published)
   qa:
     web_url: null # TODO: Frontend URL for qa env
     api_url: null # TODO: API base URL for qa env

@@ -26,7 +26,7 @@ import { defineConfig } from 'allure';
  */
 
 export default defineConfig({
-  name: 'Agentic QA Boilerplate',
+  name: 'Route Optimizer QA',
   output: './allure-report',
   // Persisted outside allure-report/ so `bun run test:clean` (which wipes
   // allure-results/ and allure-report/) never erases trend history.
