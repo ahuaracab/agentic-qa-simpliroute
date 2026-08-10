@@ -1,0 +1,74 @@
+# ============================================
+# Setup Target Backend — NON-DOCTRINE PIECE
+# ============================================
+# The KATA CI doctrine (ci-cd-integration.md) assumes the target is reachable
+# via a deployed URL supplied as secrets. Route Optimizer only runs locally
+# (no staging/prod deploy), so CI must stand the target up itself before any
+# suite can run. This action clones the target repo, installs the backend,
+# migrates the sqlite DB and starts `runserver` in the background inside the
+# SAME runner/job — tests hit 127.0.0.1:8000 as they do locally.
+#
+# Target repo is public — anonymous checkout works (GITHUB_TOKEN default).
+
+name: Setup Target Backend
+description: Clone the route-optimizer target, install backend deps, migrate and start the Django dev server.
+
+inputs:
+  repo:
+    description: Target repository (owner/name)
+    required: false
+    default: ahuaracab/route-optimizer
+  ref:
+    description: Branch/tag/SHA to check out
+    required: false
+    default: main
+  backend-path:
+    description: Path to the backend dir inside the target repo (relative to workspace)
+    required: false
+    default: route-optimizer/backend
+  python-version:
+    description: Python version for the target backend
+    required: false
+    default: '3.13'
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Target Repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo }}
+        ref: ${{ inputs.ref }}
+        path: route-optimizer
+        fetch-depth: 1
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Backend Dependencies
+      shell: bash
+      working-directory: ${{ inputs.backend-path }}
+      run: pip install -r requirements.txt
+
+    - name: Apply Migrations
+      shell: bash
+      working-directory: ${{ inputs.backend-path }}
+      run: python manage.py migrate --noinput
+
+    - name: Start Backend Server (background)
+      shell: bash
+      working-directory: ${{ inputs.backend-path }}
+      run: |
+        nohup python manage.py runserver 0.0.0.0:8000 > server.log 2>&1 &
+        for i in $(seq 1 60); do
+          if curl -fsS http://127.0.0.1:8000/api/vehicles/ > /dev/null 2>&1; then
+            echo "Backend ready on http://127.0.0.1:8000"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "::error::Backend did not become ready within 120s"
+        tail -n 50 server.log || true
+        exit 1

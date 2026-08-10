@@ -1,0 +1,80 @@
+# ============================================
+# KATA Doctrine — Test - Main Branch
+# ============================================
+# Doctrine (ci-cd-integration.md §4): `push` to `main` runs Integration +
+# E2E @critical to keep main green. Today the executable suite is the
+# @critical smoke (vehicle API); the integration suite is not authored yet,
+# so this gate runs the smoke only. Reconcile as the suite grows.
+
+name: Test - Main Branch
+run-name: E2E @critical on ${{ github.ref_name }}
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  CI: true
+  TEST_ENV: local
+
+jobs:
+  e2e-critical:
+    name: E2E @critical
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: local
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Validate Test Environment Variables
+        run: bun run test:env:check
+
+      # Non-doctrine piece: the target only runs locally, so CI spins it up
+      # itself (target repo is public; no token needed).
+      - name: Setup Target Backend
+        uses: ./.github/actions/setup-target
+
+      - name: Install Playwright Browsers
+        run: bun run pw:install
+
+      - name: Run E2E @critical on ${{ env.TEST_ENV }}
+        run: bun run test:smoke
+
+      - name: Upload Allure Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-e2e-allure-results
+          path: allure-results/
+          retention-days: 10
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-e2e-test-results
+          path: test-results/
+          retention-days: 10
+
+      - name: Upload Failure Evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-e2e-failure-evidence
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 10

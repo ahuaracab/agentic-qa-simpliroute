@@ -55,6 +55,11 @@ jobs:
       - name: Validate Test Environment Variables
         run: bun run test:env:check
 
+      # Non-doctrine piece: the target only runs locally, so CI spins it up
+      # itself (target repo is public; no token needed).
+      - name: Setup Target Backend
+        uses: ./.github/actions/setup-target
+
       - name: Install Playwright Browsers
         run: bun run pw:install
 

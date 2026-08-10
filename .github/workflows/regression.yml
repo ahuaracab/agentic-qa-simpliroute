@@ -74,10 +74,17 @@ jobs:
       - name: Validate Test Environment Variables
         run: bun run test:env:check
 
+      # Non-doctrine piece: the target only runs locally, so CI spins it up
+      # itself (target repo is public; no token needed).
+      - name: Setup Target Backend
+        uses: ./.github/actions/setup-target
+
       - name: Install Playwright (API context)
         run: bun run pw:install
 
+      # Integration suite not authored yet — skip instead of failing on 0 tests.
       - name: Run Integration Tests on ${{ env.TEST_ENV }}
+        if: ${{ hashFiles('tests/integration/**/*.test.ts') != '' }}
         run: bun run test:integration
 
       - name: Upload Integration Allure Results
@@ -131,6 +138,11 @@ jobs:
 
       - name: Validate Test Environment Variables
         run: bun run test:env:check
+
+      # Non-doctrine piece: the target only runs locally, so CI spins it up
+      # itself (target repo is public; no token needed).
+      - name: Setup Target Backend
+        uses: ./.github/actions/setup-target
 
       - name: Install Playwright Browsers
         run: bun run pw:install
