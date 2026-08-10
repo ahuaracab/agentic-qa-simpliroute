@@ -86,10 +86,9 @@ GREEN items are reported, not asked.
 
 The OpenAPI MCP is **schema-read-only**; authenticated requests run via **curl**. Canon: `agentic-qa-core/references/api-testing-doctrine.md`.
 
-1. **Schema (read-only):** use the `openapi` MCP's `list-api-endpoints` + `get-api-endpoint-schema` to learn the contract. `OPENAPI_SPEC_PATH` is a local file OR a live URL (commonly the localhost backend). No token needed.
-2. **Precondition for execution:** `scripts/api-login.ts` is project-adapted (auth endpoint + payload shape wired by `/adapt-framework`), and `<<ACTIVE_ENV>>`-scoped creds exist in `.env`. Still generic → hand off to `/adapt-framework`; do not improvise an auth call.
-3. **Mint the token:** run `bun run api:login [<env>] [--role <role>]`. It authenticates the env+role creds and writes `.auth/tokens.env` (`export API_TOKEN_<ROLE>_<ENV>='…'`) + `.auth/tokens.json` (metadata) + `.auth/api-state.json` (Playwright). The AI never pastes the raw token.
-4. **Execute (curl):** `source .auth/tokens.env && curl -H "Authorization: Bearer $API_TOKEN_<ROLE>_<ENV>" "$API_BASE_URL/<path>"` — `source` + `curl` in the SAME Bash call. **No restart** (the token never enters an MCP). Multiple roles/envs coexist in the same files.
+1. **Schema (read-only):** this repo's target publishes no OpenAPI spec (drf-spectacular not installed) — the `openapi` MCP is disabled and contracts live in hand-written `api/schemas/*` facades. Auth projects: use the `openapi` MCP's `list-api-endpoints` + `get-api-endpoint-schema` to learn the contract.
+2. **Precondition for execution:** this project's API is public (`AllowAny`) — no token minting, no creds in `.env`; curl executes directly without an Authorization header. Auth projects: the adapted token script plus `<<ACTIVE_ENV>>`-scoped creds in `.env` are required first. Still generic → hand off to `/adapt-framework`; do not improvise an auth call.
+3. **Execute (curl):** `curl "$API_BASE_URL/<path>"` — no token needed. Auth projects: `source .auth/tokens.env && curl -H "Authorization: Bearer $API_TOKEN_<ROLE>_<ENV>" "$API_BASE_URL/<path>"` — `source` + `curl` in the SAME Bash call. **No restart** (the token never enters an MCP).
 
 ## 7. Output contract
 
