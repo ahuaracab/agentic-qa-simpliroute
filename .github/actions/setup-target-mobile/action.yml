@@ -125,6 +125,18 @@ runs:
         echo -e "\n33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > /usr/local/lib/android/sdk/licenses/google-gdk-license
         echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" >> /usr/local/lib/android/sdk/licenses/android-sdk-license
 
+    - name: Bundle React Native JS
+      shell: bash
+      working-directory: mobile-demo
+      run: |
+        mkdir -p android/app/src/main/assets
+        npx react-native bundle \
+          --platform android \
+          --dev false \
+          --entry-file index.ts \
+          --bundle-output android/app/src/main/assets/index.android.bundle \
+          --assets-dest android/app/src/main/res
+
     - name: Build Debug APK
       shell: bash
       working-directory: mobile-demo/android
