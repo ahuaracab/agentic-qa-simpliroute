@@ -18,6 +18,9 @@ appId: com.anonymous.mobiledemo
 - assertVisible:
     id: greeting-text
 
+# Dismiss keyboard so counter buttons are not hidden behind it
+- hideKeyboard
+
 # Test 3: Counter - wait for increment button, then increment x3
 - extendedWaitUntil:
     visible:
