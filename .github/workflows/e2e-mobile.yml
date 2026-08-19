@@ -35,13 +35,16 @@ jobs:
           ref: ${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}
           apk-dest: tests/mobile/apk/app-release.apk
 
+      - name: Setup Maestro
+        uses: remarkablemark/setup-maestro-cli@v1
+
       - name: Enable KVM for Emulator
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Start Android Emulator
+      - name: Start Emulator & Run Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -50,13 +53,8 @@ jobs:
           profile: pixel_6
           script: |
             adb install -r tests/mobile/apk/app-release.apk
-            echo "APK installed on emulator"
-
-      - name: Setup Maestro
-        uses: remarkablemark/setup-maestro-cli@v1
-
-      - name: Run E2E Tests
-        run: maestro test tests/mobile/.maestro/
+            echo "APK installed, running Maestro tests..."
+            maestro test tests/mobile/.maestro/
 
       - name: Upload Test Artifacts
         if: always()
