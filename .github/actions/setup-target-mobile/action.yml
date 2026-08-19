@@ -1,13 +1,14 @@
 # ============================================
 # Setup Target Mobile — NON-DOCTRINE PIECE
 # ============================================
-# Clones the mobile-demo repo, builds the release APK and places it where
+# Clones the mobile-demo repo, generates the Android project with
+# expo prebuild, builds the release APK and places it where
 # test:mobile:install expects it (tests/mobile/apk/app-release.apk).
 
 name: Setup Target Mobile (Build APK)
 description: >
-  Clone the mobile-demo repository, build the Android release APK and
-  cache it for the Maestro E2E tests.
+  Clone the mobile-demo repository, generate Android native project,
+  build the release APK and cache it for the Maestro E2E tests.
 
 inputs:
   repo:
@@ -33,12 +34,23 @@ runs:
     - name: Clone Mobile Demo Repo
       shell: bash
       run: |
-        echo "Cloning ${{ inputs.repo }} branch ${{ inputs.ref }}..."
         git clone --depth 1 --branch ${{ inputs.ref }} \
           https://github.com/${{ inputs.repo }}.git mobile-demo
-        echo "Clone done. Contents:"
-        ls -la mobile-demo/
-        ls -la mobile-demo/android/ || echo "android/ not found"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install App Dependencies
+      shell: bash
+      working-directory: mobile-demo
+      run: npm ci
+
+    - name: Generate Android Project
+      shell: bash
+      working-directory: mobile-demo
+      run: npx expo prebuild --platform android --no-install
 
     - name: Setup Java ${{ inputs.java-version }}
       uses: actions/setup-java@v4
