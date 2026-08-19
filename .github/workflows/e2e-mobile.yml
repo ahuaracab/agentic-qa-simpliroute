@@ -28,6 +28,7 @@ jobs:
       - name: Build APK from Mobile Demo
         uses: ./.github/actions/setup-target-mobile
         with:
+          token: ${{ secrets.MOBILE_DEMO_TOKEN }}
           ref: ${{ github.event.inputs.mobile-ref || 'main' }}
           apk-dest: tests/mobile/apk/app-release.apk
 

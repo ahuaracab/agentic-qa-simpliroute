@@ -12,6 +12,9 @@ description: >
   cache it for the Maestro E2E tests.
 
 inputs:
+  token:
+    description: GitHub token with access to the mobile repo (for private repos)
+    required: true
   repo:
     description: Mobile target repository (owner/name)
     required: false
@@ -37,6 +40,7 @@ runs:
       with:
         repository: ${{ inputs.repo }}
         ref: ${{ inputs.ref }}
+        token: ${{ inputs.token }}
         path: mobile-demo
         fetch-depth: 1
 
