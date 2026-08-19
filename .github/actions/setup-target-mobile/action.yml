@@ -1,0 +1,87 @@
+# ============================================
+# Setup Target Mobile — NON-DOCTRINE PIECE
+# ============================================
+# Clones the mobile-demo repo, builds the release APK and places it where
+# test:mobile:install expects it (tests/mobile/apk/app-release.apk).
+# The APK is cached so subsequent runs skip the Gradle build when the
+# mobile-demo source hasn't changed.
+
+name: Setup Target Mobile (Build APK)
+description: >
+  Clone the mobile-demo repository, build the Android release APK and
+  cache it for the Maestro E2E tests.
+
+inputs:
+  repo:
+    description: Mobile target repository (owner/name)
+    required: false
+    default: ahuaracab/mobile-demo-e2e
+  ref:
+    description: Branch/tag/SHA to check out
+    required: false
+    default: main
+  java-version:
+    description: Java version for the Gradle build
+    required: false
+    default: '17'
+  apk-dest:
+    description: Destination path for the APK (relative to workspace root)
+    required: false
+    default: tests/mobile/apk/app-release.apk
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Mobile Demo Repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo }}
+        ref: ${{ inputs.ref }}
+        path: mobile-demo
+        fetch-depth: 1
+
+    - name: Cache Gradle Build
+      uses: actions/cache@v4
+      with:
+        path: |
+          mobile-demo/android/.gradle
+          mobile-demo/android/app/build
+        key: gradle-${{ inputs.ref }}-${{ hashFiles('mobile-demo/android/**/*.gradle*') }}
+        restore-keys: |
+          gradle-${{ inputs.ref }}-
+          gradle-
+
+    - name: Setup Java ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java-version }}
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Build Release APK
+      shell: bash
+      working-directory: mobile-demo/android
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleRelease --no-daemon
+
+    - name: Prepare APK Destination
+      shell: bash
+      run: mkdir -p "$(dirname "${{ inputs.apk-dest }}")"
+
+    - name: Copy APK to Test Location
+      shell: bash
+      run: |
+        cp mobile-demo/android/app/build/outputs/apk/release/app-release.apk \
+           "${{ inputs.apk-dest }}"
+        echo "APK ready at ${{ inputs.apk-dest }}"
+        ls -lh "${{ inputs.apk-dest }}"
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: ${{ inputs.apk-dest }}
+        retention-days: 7

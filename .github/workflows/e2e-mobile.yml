@@ -1,0 +1,68 @@
+name: Mobile E2E Tests (Maestro)
+
+on:
+  repository_dispatch:
+    types: [mobile-e2e-trigger]
+  workflow_dispatch:
+    inputs:
+      mobile-ref:
+        description: 'Branch/tag/SHA of mobile-demo to build'
+        required: false
+        default: 'main'
+
+jobs:
+  e2e-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout QA Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build APK from Mobile Demo
+        uses: ./.github/actions/setup-target-mobile
+        with:
+          ref: ${{ github.event.inputs.mobile-ref || 'main' }}
+          apk-dest: tests/mobile/apk/app-release.apk
+
+      - name: Enable KVM for Emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Start Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb install -r tests/mobile/apk/app-release.apk
+            echo "APK installed on emulator"
+
+      - name: Setup Maestro
+        uses: mobile-dev-inc/setup-maestro@v1
+        with:
+          version: 2.8.0
+
+      - name: Run E2E Tests
+        run: maestro test tests/mobile/.maestro/
+
+      - name: Upload Test Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-test-results
+          path: ~/.maestro/tests/
+          retention-days: 14
