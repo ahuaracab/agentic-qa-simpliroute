@@ -5,11 +5,12 @@ appId: com.anonymous.mobiledemo
     visible: Demo E2E Mobile
     timeout: 30000
 
-# Test 1: Verify main title
+# Test 1: Verify main title has correct text
 - assertVisible:
     id: main-title
+    text: Demo E2E Mobile
 
-# Test 2: Greeting flow
+# Test 2: Greeting flow - type name, tap greet, validate result
 - tapOn:
     id: name-input
 - inputText: Tester
@@ -17,11 +18,17 @@ appId: com.anonymous.mobiledemo
     id: greet-button
 - assertVisible:
     id: greeting-text
+    text: Hola Tester!
 
 # Dismiss keyboard so counter buttons are not hidden behind it
 - hideKeyboard
 
-# Test 3: Counter - wait for increment button, then increment x3
+# Test 3: Counter starts at 0
+- assertVisible:
+    id: counter-value
+    text: '0'
+
+# Test 4: Increment x3 → counter should be 3
 - extendedWaitUntil:
     visible:
       id: increment-button
@@ -34,14 +41,16 @@ appId: com.anonymous.mobiledemo
     id: increment-button
 - assertVisible:
     id: counter-value
+    text: '3'
 
-# Test 4: Counter - decrement
+# Test 5: Decrement x1 → counter should be 2
 - tapOn:
     id: decrement-button
 - assertVisible:
     id: counter-value
+    text: '2'
 
-# Test 5: Counter - go negative
+# Test 6: Decrement x3 → counter should be -1
 - tapOn:
     id: decrement-button
 - tapOn:
@@ -50,3 +59,4 @@ appId: com.anonymous.mobiledemo
     id: decrement-button
 - assertVisible:
     id: counter-value
+    text: '-1'
