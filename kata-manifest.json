@@ -1,8 +1,65 @@
 {
   "version": "1.0",
-  "generatedAt": "2026-08-10T18:10:10.145Z",
+  "generatedAt": "2026-08-19T05:54:27.096Z",
   "components": {
     "api": [
+      {
+        "name": "OptimizationApi",
+        "file": "OptimizationApi.ts",
+        "relativePath": "tests\\components\\api\\OptimizationApi.ts",
+        "atcs": [
+          {
+            "id": "ROUTE-221",
+            "method": "createOptimizationSuccessfully",
+            "line": 61
+          },
+          {
+            "id": "ROUTE-222",
+            "method": "listOptimizationsSuccessfully",
+            "line": 80
+          },
+          {
+            "id": "ROUTE-223",
+            "method": "retrieveOptimizationSuccessfully",
+            "line": 91
+          },
+          {
+            "id": "ROUTE-224",
+            "method": "confirmOptimizationSuccessfully",
+            "line": 102
+          },
+          {
+            "id": "ROUTE-225",
+            "method": "completeOptimizationSuccessfully",
+            "line": 117
+          },
+          {
+            "id": "ROUTE-226",
+            "method": "cancelOptimizationSuccessfully",
+            "line": 132
+          },
+          {
+            "id": "ROUTE-227",
+            "method": "createOptimizationWithUnknownVehicle",
+            "line": 146
+          },
+          {
+            "id": "ROUTE-228",
+            "method": "getAvailableResourcesSuccessfully",
+            "line": 162
+          },
+          {
+            "id": "ROUTE-229",
+            "method": "resolveStopDeliveredSuccessfully",
+            "line": 176
+          },
+          {
+            "id": "ROUTE-230",
+            "method": "deleteOptimizationSuccessfully",
+            "line": 192
+          }
+        ]
+      },
       {
         "name": "VehicleApi",
         "file": "VehicleApi.ts",
@@ -29,16 +86,76 @@
             "line": 122
           }
         ]
+      },
+      {
+        "name": "VisitApi",
+        "file": "VisitApi.ts",
+        "relativePath": "tests\\components\\api\\VisitApi.ts",
+        "atcs": [
+          {
+            "id": "ROUTE-211",
+            "method": "createVisitSuccessfully",
+            "line": 48
+          },
+          {
+            "id": "ROUTE-212",
+            "method": "listVisitsSuccessfully",
+            "line": 62
+          },
+          {
+            "id": "ROUTE-213",
+            "method": "createVisitWithInvalidData",
+            "line": 73
+          },
+          {
+            "id": "ROUTE-214",
+            "method": "retrieveVisitSuccessfully",
+            "line": 86
+          },
+          {
+            "id": "ROUTE-215",
+            "method": "updateVisitSuccessfully",
+            "line": 97
+          },
+          {
+            "id": "ROUTE-216",
+            "method": "deleteVisitSuccessfully",
+            "line": 111
+          }
+        ]
       }
     ],
-    "ui": []
+    "ui": [
+      {
+        "name": "VehiclePage",
+        "file": "VehiclePage.ts",
+        "relativePath": "tests\\components\\ui\\VehiclePage.ts",
+        "atcs": [
+          {
+            "id": "ROUTE-301",
+            "method": "navigateToVehiclesSuccessfully",
+            "line": 42
+          },
+          {
+            "id": "ROUTE-302",
+            "method": "createVehicleSuccessfully",
+            "line": 59
+          },
+          {
+            "id": "ROUTE-303",
+            "method": "deleteVehicleSuccessfully",
+            "line": 99
+          }
+        ]
+      }
+    ]
   },
   "preconditions": [],
   "summary": {
-    "totalComponents": 1,
-    "totalATCs": 4,
-    "apiComponents": 1,
-    "uiComponents": 0,
+    "totalComponents": 4,
+    "totalATCs": 23,
+    "apiComponents": 3,
+    "uiComponents": 1,
     "preconditionModules": 0
   }
 }
