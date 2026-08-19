@@ -129,8 +129,6 @@ runs:
       shell: bash
       working-directory: mobile-demo
       run: |
-        npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android @react-native/metro-config
-        printf "const { getDefaultConfig } = require('expo/metro-config');\nmodule.exports = getDefaultConfig(__dirname);\n" > metro.config.js
         mkdir -p android/app/src/main/assets
         npx react-native bundle \
           --platform android \
