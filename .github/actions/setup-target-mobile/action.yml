@@ -71,6 +71,18 @@ runs:
       working-directory: mobile-demo
       run: npx expo prebuild --platform android --no-install
 
+    - name: Force x86_64 Architecture Only
+      shell: bash
+      run: |
+        PROPS="mobile-demo/android/gradle.properties"
+        if ! grep -q "reactNativeArchitectures" "$PROPS"; then
+          echo "reactNativeArchitectures=x86_64" >> "$PROPS"
+        else
+          sed -i 's/reactNativeArchitectures=.*/reactNativeArchitectures=x86_64/' "$PROPS"
+        fi
+        echo "=== gradle.properties ==="
+        grep -E "react|architect" "$PROPS" || true
+
     - name: Setup Java ${{ inputs.java-version }}
       uses: actions/setup-java@v5
       with:
