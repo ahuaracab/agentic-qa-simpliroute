@@ -14,10 +14,14 @@ jobs:
   e2e-android:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
     steps:
       - name: Checkout QA Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN_MOBILE }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -28,8 +32,7 @@ jobs:
       - name: Build APK from Mobile Demo
         uses: ./.github/actions/setup-target-mobile
         with:
-          token: ${{ secrets.TOKEN_MOBILE }}
-          ref: ${{ github.event.inputs.mobile-ref || 'main' }}
+          ref: ${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'main' }}
           apk-dest: tests/mobile/apk/app-release.apk
 
       - name: Enable KVM for Emulator
