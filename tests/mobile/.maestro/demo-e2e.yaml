@@ -11,35 +11,38 @@ appId: com.anonymous.mobiledemo
 
 # Test 2: Greeting flow
 - tapOn:
-    text: Escribi tu nombre
+    id: name-input
 - inputText: Tester
 - tapOn:
-    text: Saludar
+    id: greet-button
 - assertVisible:
     text: Hola Tester!
 
 # Test 3: Counter - increment x3
 - tapOn:
-    text: '+'
+    id: increment-button
 - tapOn:
-    text: '+'
+    id: increment-button
 - tapOn:
-    text: '+'
+    id: increment-button
 - assertVisible:
-    text: '3'
+    id: counter-value
+    text: 3
 
 # Test 4: Counter - decrement
 - tapOn:
-    text: '-'
+    id: decrement-button
 - assertVisible:
-    text: '2'
+    id: counter-value
+    text: 2
 
 # Test 5: Counter - go negative
 - tapOn:
-    text: '-'
+    id: decrement-button
 - tapOn:
-    text: '-'
+    id: decrement-button
 - tapOn:
-    text: '-'
+    id: decrement-button
 - assertVisible:
-    text: '-1'
+    id: counter-value
+    text: -1
