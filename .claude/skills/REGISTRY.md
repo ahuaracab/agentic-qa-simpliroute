@@ -1,6 +1,6 @@
 # Skill Registry (auto-generated)
 
-> Generated: `2026-08-10T18:17:52.780Z`
+> Generated: `2026-08-19T22:32:52.536Z`
 > Generator: `bun scripts/build-skill-registry.ts`
 > Protocol: `.claude/skills/agentic-qa-core/references/skill-resolver.md`
 
@@ -8,7 +8,7 @@ This file is the per-session compact-rules cache for the Skill Resolver protocol
 The orchestrator copies one or more `## Skill: <slug>` blocks below into every subagent briefing under `## Project Standards (auto-resolved)`.
 Subagents trust those compact rules and only read the full SKILL.md when explicitly instructed.
 
-Skills indexed: 15
+Skills indexed: 16
 
 ---
 ## Skill: acli
@@ -196,6 +196,34 @@ Skills indexed: 15
 **Read full SKILL.md when**: the compact rules above are insufficient (e.g. novel scenario, debugging, or the briefing tells you to load the full skill).
 
 > Source: `.claude\skills\judgment-day\SKILL.md` · phase: `unknown` · extraction strategy: B
+
+---
+
+## Skill: mobile-e2e-testing
+
+**Purpose**: Mobile E2E testing strategy, CI pipeline decisions, and framework recommendations.
+
+**Compact Rules**:
+- Checkout QA Repository
+- Clone Mobile Demo Repo (depth 1, specific branch)
+- Restore npm cache
+- Install App Dependencies (npm ci)
+- Restore Android project cache
+- Generate Android Project (if cache miss)
+- Force x86_64 Architecture Only
+- Bundle React Native JS
+- Restore Gradle distribution cache
+- Restore Gradle caches
+- Detect Java path (dynamic)
+- Pre-accept SDK Licenses
+- Build Debug APK
+- Copy APK to Test Location
+- Install Maestro
+- (truncated — read full SKILL.md for the rest)
+
+**Read full SKILL.md when**: the compact rules above are insufficient (e.g. novel scenario, debugging, or the briefing tells you to load the full skill).
+
+> Source: `.claude\skills\mobile-e2e-testing\SKILL.md` · phase: `unknown` · extraction strategy: B
 
 ---
 
