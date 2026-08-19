@@ -33,8 +33,12 @@ runs:
     - name: Clone Mobile Demo Repo
       shell: bash
       run: |
+        echo "Cloning ${{ inputs.repo }} branch ${{ inputs.ref }}..."
         git clone --depth 1 --branch ${{ inputs.ref }} \
           https://github.com/${{ inputs.repo }}.git mobile-demo
+        echo "Clone done. Contents:"
+        ls -la mobile-demo/
+        ls -la mobile-demo/android/ || echo "android/ not found"
 
     - name: Setup Java ${{ inputs.java-version }}
       uses: actions/setup-java@v4
