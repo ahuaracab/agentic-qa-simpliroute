@@ -8,7 +8,7 @@ on:
       mobile-ref:
         description: 'Branch/tag/SHA of mobile-demo to build'
         required: false
-        default: 'main'
+        default: 'master'
 
 jobs:
   e2e-android:
