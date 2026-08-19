@@ -164,9 +164,14 @@ jobs:
           arch: x86_64
           profile: pixel_6
           script: |
+            echo "=== Disable Pixel Launcher to prevent ANR ==="
+            adb shell pm disable-user com.google.android.apps.nexuslauncher 2>/dev/null || true
+            adb shell pm disable-user com.android.launcher3 2>/dev/null || true
+            adb shell input keyevent KEYCODE_BACK 2>/dev/null || true
+            sleep 2
+
             echo "=== DEBUG: Checking emulator status ==="
             adb devices
-            adb shell getprop ro.build.display.id
 
             echo "=== DEBUG: Installing APK ==="
             adb install -r tests/mobile/apk/app-release.apk
@@ -175,31 +180,27 @@ jobs:
             echo "=== DEBUG: Verifying APK is installed ==="
             adb shell pm list packages | grep mobiledemo
 
-            echo "=== DEBUG: Launching app ==="
-            adb shell am start -n com.anonymous.mobiledemo/.MainActivity
-            sleep 8
+            echo "=== DEBUG: Force stop and relaunch app ==="
+            adb shell am force-stop com.anonymous.mobiledemo
+            sleep 1
+            adb shell am start -W -n com.anonymous.mobiledemo/.MainActivity
+            sleep 10
 
-            echo "=== DEBUG: Checking if activity is running ==="
-            adb shell dumpsys activity activities | grep -A 5 "mobiledemo" | head -20
+            echo "=== Dismiss any overlaying dialog after app launch ==="
+            adb shell input keyevent KEYCODE_BACK
+            sleep 1
+
+            echo "=== DEBUG: Check focused window ==="
+            adb shell "dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -5"
 
             echo "=== DEBUG: Screenshot after launch ==="
             adb exec-out screencap -p > /tmp/screenshot-after-launch.png || true
-            echo "Screenshot saved: $(ls -la /tmp/screenshot-after-launch.png 2>/dev/null || echo 'FAILED')"
+            echo "Screenshot size: $(wc -c < /tmp/screenshot-after-launch.png 2>/dev/null || echo '0') bytes"
 
-            echo "=== DEBUG: Logcat errors ==="
-            adb logcat -d -t 200 | grep -iE "(ReactNative|FATAL|Error|Exception|crash)" | tail -50 > /tmp/logcat-errors.txt
-            cat /tmp/logcat-errors.txt
-
-            echo "=== DEBUG: UI Automator hierarchy (what Maestro sees) ==="
+            echo "=== DEBUG: View hierarchy ==="
             adb shell uiautomator dump /sdcard/window_dump.xml
             adb pull /sdcard/window_dump.xml /tmp/window_dump.xml || true
             cat /tmp/window_dump.xml | head -100
-
-            echo "=== DEBUG: Full logcat for this app (last 500 lines) ==="
-            PID=$(adb shell pidof com.anonymous.mobiledemo)
-            echo "App PID: $PID"
-            adb logcat -d --pid=$PID | tail -200 > /tmp/logcat-app.txt
-            cat /tmp/logcat-app.txt
 
             echo "=== Running Maestro tests ==="
             maestro test tests/mobile/.maestro/
