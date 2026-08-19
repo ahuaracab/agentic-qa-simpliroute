@@ -190,8 +190,16 @@ jobs:
             adb logcat -d -t 200 | grep -iE "(ReactNative|FATAL|Error|Exception|crash)" | tail -50 > /tmp/logcat-errors.txt
             cat /tmp/logcat-errors.txt
 
-            echo "=== DEBUG: Checking React Native bundle ==="
-            adb shell ls -la /data/data/com.anonymous.mobiledemo/files/ 2>/dev/null || echo "Cannot access app files (may need root)"
+            echo "=== DEBUG: UI Automator hierarchy (what Maestro sees) ==="
+            adb shell uiautomator dump /sdcard/window_dump.xml
+            adb pull /sdcard/window_dump.xml /tmp/window_dump.xml || true
+            cat /tmp/window_dump.xml | head -100
+
+            echo "=== DEBUG: Full logcat for this app (last 500 lines) ==="
+            PID=$(adb shell pidof com.anonymous.mobiledemo)
+            echo "App PID: $PID"
+            adb logcat -d --pid=$PID | tail -200 > /tmp/logcat-app.txt
+            cat /tmp/logcat-app.txt
 
             echo "=== Running Maestro tests ==="
             maestro test tests/mobile/.maestro/
@@ -205,4 +213,6 @@ jobs:
             ~/.maestro/tests/
             /tmp/screenshot-after-launch.png
             /tmp/logcat-errors.txt
+            /tmp/logcat-app.txt
+            /tmp/window_dump.xml
           retention-days: 14
