@@ -88,7 +88,7 @@ runs:
       working-directory: mobile-demo/android
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64
 
     - name: Prepare APK Destination
       shell: bash
