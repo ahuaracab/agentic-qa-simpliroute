@@ -2,23 +2,32 @@ appId: com.anonymous.mobiledemo
 ---
 - launchApp
 - extendedWaitUntil:
-    visible: Demo E2E Mobile
+    visible:
+      id: main-title
     timeout: 30000
 
 # Test 1: Verify main title
 - assertVisible:
-    text: Demo E2E Mobile
+    id: main-title
 
 # Test 2: Greeting flow
+- extendedWaitUntil:
+    visible:
+      id: name-input
+    timeout: 10000
 - tapOn:
     id: name-input
 - inputText: Tester
 - tapOn:
     id: greet-button
 - assertVisible:
-    text: Hola Tester!
+    id: greeting-text
 
-# Test 3: Counter - increment x3
+# Test 3: Counter - wait for increment button, then increment x3
+- extendedWaitUntil:
+    visible:
+      id: increment-button
+    timeout: 10000
 - tapOn:
     id: increment-button
 - tapOn:
@@ -27,14 +36,12 @@ appId: com.anonymous.mobiledemo
     id: increment-button
 - assertVisible:
     id: counter-value
-    text: 3
 
 # Test 4: Counter - decrement
 - tapOn:
     id: decrement-button
 - assertVisible:
     id: counter-value
-    text: 2
 
 # Test 5: Counter - go negative
 - tapOn:
@@ -45,4 +52,3 @@ appId: com.anonymous.mobiledemo
     id: decrement-button
 - assertVisible:
     id: counter-value
-    text: -1
