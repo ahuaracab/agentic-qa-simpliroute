@@ -5,16 +5,16 @@ appId: com.anonymous.mobiledemo
 
 # Test 1: Verify main title
 - assertVisible:
-    text: 'Demo E2E Mobile'
+    text: Demo E2E Mobile
 
 # Test 2: Greeting flow
 - tapOn:
-    text: 'Escribi tu nombre'
-- inputText: 'Tester'
+    text: Escribi tu nombre
+- inputText: Tester
 - tapOn:
-    text: 'Saludar'
+    text: Saludar
 - assertVisible:
-    text: 'Hola Tester!'
+    text: Hola Tester!
 
 # Test 3: Counter - increment x3
 - tapOn:
