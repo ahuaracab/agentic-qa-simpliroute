@@ -103,21 +103,27 @@ runs:
         restore-keys: |
           gradle-caches-${{ runner.os }}-
 
-    - name: Cache Android SDK
-      id: cache-sdk
+    - name: Cache Android SDK, NDK & CMake
       uses: actions/cache@v4
       with:
         path: /usr/local/lib/android/sdk
-        key: android-sdk-${{ runner.os }}
+        key: android-full-${{ runner.os }}-v3
+        restore-keys: |
+          android-full-${{ runner.os }}-
 
     - name: Setup Android SDK
-      if: steps.cache-sdk.outputs.cache-hit != 'true'
       uses: android-actions/setup-android@v3
 
-    - name: Accept Android SDK Licenses
-      if: steps.cache-sdk.outputs.cache-hit != 'true'
+    - name: Pre-accept SDK Licenses
       shell: bash
-      run: yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      run: |
+        mkdir -p /usr/local/lib/android/sdk/licenses
+        echo -e "\n24333f8a63b6825ea9c5514f83c2829b004d1fee" > /usr/local/lib/android/sdk/licenses/android-sdk-license
+        echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > /usr/local/lib/android/sdk/licenses/android-sdk-preview-license
+        echo -e "\nd975f751698a77b662f1254ddbeed3901e976f5a" > /usr/local/lib/android/sdk/licenses/android-sdk-arm-dbt-license
+        echo -e "\ne9acab5b5fbb560a72797e13e6e1c54f5c138524" > /usr/local/lib/android/sdk/licenses/intel-android-extra-license
+        echo -e "\n33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > /usr/local/lib/android/sdk/licenses/google-gdk-license
+        echo -e "\nd56f5187479451eabf01fb78af6dfcb131a6481e\n24333f8a63b6825ea9c5514f83c2829b004d1fee" >> /usr/local/lib/android/sdk/licenses/android-sdk-license
 
     - name: Build Debug APK
       shell: bash
