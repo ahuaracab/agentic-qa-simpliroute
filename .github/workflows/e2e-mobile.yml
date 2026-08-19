@@ -17,7 +17,6 @@ jobs:
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
       ANDROID_HOME: /usr/local/lib/android/sdk
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
       - name: Checkout QA Repository
@@ -92,13 +91,12 @@ jobs:
           restore-keys: |
             gradle-caches-${{ runner.os }}-
 
-      - name: Restore Android SDK cache
-        uses: actions/cache/restore@v4
-        with:
-          path: /usr/local/lib/android/sdk
-          key: android-sdk-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle') }}
-          restore-keys: |
-            android-sdk-${{ runner.os }}-
+      - name: Detect Java path
+        id: java
+        run: |
+          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "path=$JAVA_PATH" >> $GITHUB_OUTPUT
+          echo "JAVA_HOME=$JAVA_PATH" >> $GITHUB_ENV
 
       - name: Pre-accept SDK Licenses
         shell: bash
@@ -229,10 +227,3 @@ jobs:
         with:
           path: ~/.gradle/caches
           key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
-
-      - name: Save Android SDK cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: /usr/local/lib/android/sdk
-          key: android-sdk-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle') }}
