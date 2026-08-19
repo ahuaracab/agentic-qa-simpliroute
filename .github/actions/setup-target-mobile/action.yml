@@ -129,8 +129,9 @@ runs:
       shell: bash
       working-directory: mobile-demo
       run: |
+        npm install --save-dev @react-native-community/cli @react-native-community/cli-platform-android
         mkdir -p android/app/src/main/assets
-        npx --yes @react-native-community/cli bundle \
+        npx react-native bundle \
           --platform android \
           --dev false \
           --entry-file index.ts \
