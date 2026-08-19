@@ -1,0 +1,43 @@
+appId: com.anonymous.mobiledemo
+---
+- launchApp
+- waitForAnimationToEnd
+
+# Test 1: Verify main title
+- assertVisible:
+    text: 'Demo E2E Mobile'
+
+# Test 2: Greeting flow
+- tapOn:
+    text: 'Escribi tu nombre'
+- inputText: 'Tester'
+- tapOn:
+    text: 'Saludar'
+- assertVisible:
+    text: 'Hola Tester!'
+
+# Test 3: Counter - increment x3
+- tapOn:
+    text: '+'
+- tapOn:
+    text: '+'
+- tapOn:
+    text: '+'
+- assertVisible:
+    text: '3'
+
+# Test 4: Counter - decrement
+- tapOn:
+    text: '-'
+- assertVisible:
+    text: '2'
+
+# Test 5: Counter - go negative
+- tapOn:
+    text: '-'
+- tapOn:
+    text: '-'
+- tapOn:
+    text: '-'
+- assertVisible:
+    text: '-1'
