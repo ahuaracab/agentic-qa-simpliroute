@@ -88,7 +88,15 @@ runs:
       working-directory: mobile-demo/android
       run: |
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon -PreactNativeArchitectures=x86_64
+        ./gradlew assembleDebug \
+          --no-daemon \
+          --parallel \
+          --build-cache \
+          -PreactNativeArchitectures=x86_64 \
+          -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError" \
+          -x lint \
+          -x lintVitalAnalyzeRelease \
+          -x lintVitalReportRelease
 
     - name: Prepare APK Destination
       shell: bash
