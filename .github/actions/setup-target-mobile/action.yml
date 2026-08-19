@@ -19,7 +19,7 @@ inputs:
   ref:
     description: Branch/tag/SHA to check out
     required: false
-    default: main
+    default: master
   java-version:
     description: Java version for the Gradle build
     required: false

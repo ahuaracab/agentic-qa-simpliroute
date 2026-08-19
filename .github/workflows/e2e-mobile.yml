@@ -32,7 +32,7 @@ jobs:
       - name: Build APK from Mobile Demo
         uses: ./.github/actions/setup-target-mobile
         with:
-          ref: ${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'main' }}
+          ref: ${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}
           apk-dest: tests/mobile/apk/app-release.apk
 
       - name: Enable KVM for Emulator
