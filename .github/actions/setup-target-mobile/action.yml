@@ -2,13 +2,16 @@
 # Setup Target Mobile — NON-DOCTRINE PIECE
 # ============================================
 # Clones the mobile-demo repo, generates the Android project with
-# expo prebuild, builds the release APK and places it where
+# expo prebuild, builds the debug APK and places it where
 # test:mobile:install expects it (tests/mobile/apk/app-release.apk).
+#
+# Uses debug APK instead of release for faster builds (~3 min vs ~7 min).
+# Caches node_modules and the generated android/ directory.
 
 name: Setup Target Mobile (Build APK)
 description: >
   Clone the mobile-demo repository, generate Android native project,
-  build the release APK and cache it for the Maestro E2E tests.
+  build the debug APK and cache it for the Maestro E2E tests.
 
 inputs:
   repo:
@@ -41,8 +44,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 22
-        cache: npm
-        cache-dependency-path: mobile-demo/package-lock.json
 
     - name: Cache npm
       uses: actions/cache@v4
@@ -58,7 +59,17 @@ runs:
       working-directory: mobile-demo
       run: npm ci
 
+    - name: Cache Android Project
+      id: cache-android
+      uses: actions/cache@v4
+      with:
+        path: mobile-demo/android
+        key: android-${{ inputs.ref }}-${{ hashFiles('mobile-demo/app.json', 'mobile-demo/package.json', 'mobile-demo/package-lock.json') }}
+        restore-keys: |
+          android-${{ inputs.ref }}-
+
     - name: Generate Android Project
+      if: steps.cache-android.outputs.cache-hit != 'true'
       shell: bash
       working-directory: mobile-demo
       run: npx expo prebuild --platform android --no-install
@@ -72,23 +83,12 @@ runs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Cache Gradle
-      uses: actions/cache@v4
-      with:
-        path: |
-          mobile-demo/android/.gradle
-          mobile-demo/android/app/build
-        key: gradle-${{ inputs.ref }}-${{ hashFiles('mobile-demo/android/**/*.gradle*', 'mobile-demo/android/**/*.properties') }}
-        restore-keys: |
-          gradle-${{ inputs.ref }}-
-          gradle-
-
-    - name: Build Release APK
+    - name: Build Debug APK
       shell: bash
       working-directory: mobile-demo/android
       run: |
         chmod +x gradlew
-        ./gradlew assembleRelease --no-daemon --build-cache
+        ./gradlew assembleDebug --no-daemon
 
     - name: Prepare APK Destination
       shell: bash
@@ -97,7 +97,7 @@ runs:
     - name: Copy APK to Test Location
       shell: bash
       run: |
-        cp mobile-demo/android/app/build/outputs/apk/release/app-release.apk \
+        cp mobile-demo/android/app/build/outputs/apk/debug/app-debug.apk \
            "${{ inputs.apk-dest }}"
         echo "APK ready at ${{ inputs.apk-dest }}"
         ls -lh "${{ inputs.apk-dest }}"
