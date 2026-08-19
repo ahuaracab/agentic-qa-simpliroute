@@ -81,15 +81,23 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/wrapper/dists
-          key: gradle-dist-${{ runner.os }}-9.3.1
+          key: v2-gradle-dist-${{ runner.os }}-9.3.1
 
       - name: Restore Gradle caches
         uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/caches
-          key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
+          key: v2-gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
           restore-keys: |
-            gradle-caches-${{ runner.os }}-
+            v2-gradle-caches-${{ runner.os }}-
+
+      - name: Restore NDK/CMake cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk/ndk
+            /usr/local/lib/android/sdk/cmake
+          key: android-ndk-cmake-${{ runner.os }}-27.1-cmake3.22.1
 
       - name: Detect Java path
         id: java
@@ -162,30 +170,8 @@ jobs:
             echo "=== DEBUG: Verifying APK is installed ==="
             adb shell pm list packages | grep mobiledemo
 
-            echo "=== DEBUG: Force stop and relaunch app ==="
-            adb shell am force-stop com.anonymous.mobiledemo
-            sleep 1
-            adb shell am start -W -n com.anonymous.mobiledemo/.MainActivity
-            sleep 10
-
-            echo "=== Dismiss any overlaying dialog after app launch ==="
-            adb shell input keyevent KEYCODE_BACK
-            sleep 1
-
-            echo "=== DEBUG: Check focused window ==="
-            adb shell "dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | head -5"
-
-            echo "=== DEBUG: Screenshot after launch ==="
-            adb exec-out screencap -p > /tmp/screenshot-after-launch.png || true
-            echo "Screenshot size: $(wc -c < /tmp/screenshot-after-launch.png 2>/dev/null || echo '0') bytes"
-
-            echo "=== DEBUG: View hierarchy ==="
-            adb shell uiautomator dump /sdcard/window_dump.xml
-            adb pull /sdcard/window_dump.xml /tmp/window_dump.xml || true
-            cat /tmp/window_dump.xml | head -100
-
             echo "=== Running Maestro tests ==="
-            maestro test tests/mobile/.maestro/
+            maestro test tests/mobile/.maestro/ --format junit --output /tmp/maestro-results.xml
 
       - name: Upload Test Artifacts
         if: always()
@@ -193,6 +179,7 @@ jobs:
         with:
           name: maestro-test-results
           path: |
+            /tmp/maestro-results.xml
             ~/.maestro/tests/
             /tmp/screenshot-after-launch.png
             /tmp/logcat-errors.txt
@@ -202,6 +189,7 @@ jobs:
 
       - name: Save npm cache
         if: always()
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: mobile-demo/node_modules
@@ -209,6 +197,7 @@ jobs:
 
       - name: Save Android project cache
         if: always()
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: mobile-demo/android
@@ -216,14 +205,26 @@ jobs:
 
       - name: Save Gradle distribution cache
         if: always()
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: ~/.gradle/wrapper/dists
-          key: gradle-dist-${{ runner.os }}-9.3.1
+          key: v2-gradle-dist-${{ runner.os }}-9.3.1
 
       - name: Save Gradle caches
         if: always()
+        continue-on-error: true
         uses: actions/cache/save@v4
         with:
           path: ~/.gradle/caches
-          key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
+          key: v2-gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
+
+      - name: Save NDK/CMake cache
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /usr/local/lib/android/sdk/ndk
+            /usr/local/lib/android/sdk/cmake
+          key: android-ndk-cmake-${{ runner.os }}-27.1-cmake3.22.1
