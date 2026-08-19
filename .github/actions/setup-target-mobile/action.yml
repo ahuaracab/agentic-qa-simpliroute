@@ -3,10 +3,7 @@
 # ============================================
 # Clones the mobile-demo repo, generates the Android project with
 # expo prebuild, builds the debug APK and places it where
-# test:mobile:install expects it (tests/mobile/apk/app-release.apk).
-#
-# Uses debug APK instead of release for faster builds (~3 min vs ~7 min).
-# Caches node_modules and the generated android/ directory.
+# test:mobile:install expects it.
 
 name: Setup Target Mobile (Build APK)
 description: >
@@ -80,8 +77,21 @@ runs:
         distribution: temurin
         java-version: ${{ inputs.java-version }}
 
+    - name: Cache Android SDK
+      id: cache-sdk
+      uses: actions/cache@v4
+      with:
+        path: /usr/local/lib/android/sdk
+        key: android-sdk-${{ runner.os }}
+
     - name: Setup Android SDK
+      if: steps.cache-sdk.outputs.cache-hit != 'true'
       uses: android-actions/setup-android@v3
+
+    - name: Accept Android SDK Licenses
+      if: steps.cache-sdk.outputs.cache-hit != 'true'
+      shell: bash
+      run: yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
     - name: Build Debug APK
       shell: bash
@@ -92,7 +102,6 @@ runs:
           --no-daemon \
           --parallel \
           --build-cache \
-          -PreactNativeArchitectures=x86_64 \
           -Dorg.gradle.jvmargs="-Xmx4g -XX:+HeapDumpOnOutOfMemoryError" \
           -x lint \
           -x lintVitalAnalyzeRelease \
