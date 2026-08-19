@@ -164,14 +164,36 @@ jobs:
           arch: x86_64
           profile: pixel_6
           script: |
+            echo "=== DEBUG: Checking emulator status ==="
+            adb devices
+            adb shell getprop ro.build.display.id
+
+            echo "=== DEBUG: Installing APK ==="
             adb install -r tests/mobile/apk/app-release.apk
-            echo "APK installed, launching app..."
+            echo "APK install exit code: $?"
+
+            echo "=== DEBUG: Verifying APK is installed ==="
+            adb shell pm list packages | grep mobiledemo
+
+            echo "=== DEBUG: Launching app ==="
             adb shell am start -n com.anonymous.mobiledemo/.MainActivity
-            sleep 5
-            echo "Capturing logcat for debugging..."
-            adb logcat -d -s ReactNativeJS:E *:W | tail -100 > /tmp/logcat-pre-test.txt
-            adb exec-out screencap -p > /tmp/screenshot-pre-test.png || true
-            echo "Running Maestro tests..."
+            sleep 8
+
+            echo "=== DEBUG: Checking if activity is running ==="
+            adb shell dumpsys activity activities | grep -A 5 "mobiledemo" | head -20
+
+            echo "=== DEBUG: Screenshot after launch ==="
+            adb exec-out screencap -p > /tmp/screenshot-after-launch.png || true
+            echo "Screenshot saved: $(ls -la /tmp/screenshot-after-launch.png 2>/dev/null || echo 'FAILED')"
+
+            echo "=== DEBUG: Logcat errors ==="
+            adb logcat -d -t 200 | grep -iE "(ReactNative|FATAL|Error|Exception|crash)" | tail -50 > /tmp/logcat-errors.txt
+            cat /tmp/logcat-errors.txt
+
+            echo "=== DEBUG: Checking React Native bundle ==="
+            adb shell ls -la /data/data/com.anonymous.mobiledemo/files/ 2>/dev/null || echo "Cannot access app files (may need root)"
+
+            echo "=== Running Maestro tests ==="
             maestro test tests/mobile/.maestro/
 
       - name: Upload Test Artifacts
@@ -181,6 +203,6 @@ jobs:
           name: maestro-test-results
           path: |
             ~/.maestro/tests/
-            /tmp/logcat-pre-test.txt
-            /tmp/screenshot-pre-test.png
+            /tmp/screenshot-after-launch.png
+            /tmp/logcat-errors.txt
           retention-days: 14
