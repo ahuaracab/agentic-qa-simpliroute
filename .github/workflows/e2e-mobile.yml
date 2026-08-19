@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 30
     env:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
     steps:
       - name: Checkout QA Repository
@@ -23,24 +25,13 @@ jobs:
         with:
           token: ${{ secrets.TOKEN_MOBILE }}
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install Dependencies
-        run: bun install
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
       - name: Clone Mobile Demo Repo
         run: |
           git clone --depth 1 --branch ${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }} \
             https://github.com/ahuaracab/mobile-demo-e2e.git mobile-demo
 
-      - name: Cache npm
-        uses: actions/cache@v4
+      - name: Restore npm cache
+        uses: actions/cache/restore@v4
         with:
           path: mobile-demo/node_modules
           key: npm-${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}-${{ hashFiles('mobile-demo/package-lock.json') }}
@@ -52,9 +43,9 @@ jobs:
         working-directory: mobile-demo
         run: npm ci
 
-      - name: Cache Android Project
+      - name: Restore Android project cache
         id: cache-android
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: mobile-demo/android
           key: android-${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}-${{ hashFiles('mobile-demo/app.json', 'mobile-demo/package.json', 'mobile-demo/package-lock.json') }}
@@ -87,36 +78,27 @@ jobs:
             --bundle-output android/app/src/main/assets/index.android.bundle \
             --assets-dest android/app/src/main/res
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Cache Gradle Distribution
-        uses: actions/cache@v4
+      - name: Restore Gradle distribution cache
+        uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/wrapper/dists
           key: gradle-dist-${{ runner.os }}-9.3.1
 
-      - name: Cache Gradle Caches
-        uses: actions/cache@v4
+      - name: Restore Gradle caches
+        uses: actions/cache/restore@v4
         with:
           path: ~/.gradle/caches
           key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
           restore-keys: |
             gradle-caches-${{ runner.os }}-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
+      - name: Restore Android SDK cache
+        uses: actions/cache/restore@v4
         with:
           path: /usr/local/lib/android/sdk
           key: android-sdk-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle') }}
           restore-keys: |
             android-sdk-${{ runner.os }}-
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
 
       - name: Pre-accept SDK Licenses
         shell: bash
@@ -147,8 +129,10 @@ jobs:
           mkdir -p tests/mobile/apk
           cp mobile-demo/android/app/build/outputs/apk/debug/app-debug.apk tests/mobile/apk/app-release.apk
 
-      - name: Setup Maestro
-        uses: remarkablemark/setup-maestro-cli@v1
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: Enable KVM for Emulator
         run: |
@@ -217,3 +201,38 @@ jobs:
             /tmp/logcat-app.txt
             /tmp/window_dump.xml
           retention-days: 14
+
+      - name: Save npm cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: mobile-demo/node_modules
+          key: npm-${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}-${{ hashFiles('mobile-demo/package-lock.json') }}
+
+      - name: Save Android project cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: mobile-demo/android
+          key: android-${{ github.event.inputs.mobile-ref || github.event.client_payload.ref || 'master' }}-${{ hashFiles('mobile-demo/app.json', 'mobile-demo/package.json', 'mobile-demo/package-lock.json') }}
+
+      - name: Save Gradle distribution cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.gradle/wrapper/dists
+          key: gradle-dist-${{ runner.os }}-9.3.1
+
+      - name: Save Gradle caches
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.gradle/caches
+          key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
+
+      - name: Save Android SDK cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /usr/local/lib/android/sdk
+          key: android-sdk-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle') }}
