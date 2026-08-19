@@ -130,7 +130,7 @@ runs:
       working-directory: mobile-demo
       run: |
         mkdir -p android/app/src/main/assets
-        npx react-native bundle \
+        npx --yes @react-native-community/cli bundle \
           --platform android \
           --dev false \
           --entry-file index.ts \
