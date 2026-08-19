@@ -89,6 +89,20 @@ runs:
         distribution: temurin
         java-version: ${{ inputs.java-version }}
 
+    - name: Cache Gradle Distribution
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/wrapper/dists
+        key: gradle-dist-${{ runner.os }}-9.3.1
+
+    - name: Cache Gradle Caches
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/caches
+        key: gradle-caches-${{ runner.os }}-${{ hashFiles('mobile-demo/android/**/*.gradle', 'mobile-demo/android/gradle.properties') }}
+        restore-keys: |
+          gradle-caches-${{ runner.os }}-
+
     - name: Cache Android SDK
       id: cache-sdk
       uses: actions/cache@v4
