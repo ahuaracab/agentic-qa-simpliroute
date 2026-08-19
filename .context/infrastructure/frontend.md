@@ -1,7 +1,7 @@
 # Frontend Infrastructure — Delivery Route Planner
 
 > Discovery (reverse-engineering) · Generado: 2026-08-08 · Fase 3 (Infrastructure Discovery).
-> Target: `C:\laragon\www\route-optimizer\frontend` (React 19 + Vite 8 + TypeScript + Leaflet). READ-ONLY — este documento no modifica el target.
+> Target: `../route-optimizer/frontend` (React 19 + Vite 8 + TypeScript + Leaflet). READ-ONLY — este documento no modifica el target.
 
 ## Stack Detection
 

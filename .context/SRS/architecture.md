@@ -13,7 +13,7 @@
 | Auth | Ninguna — `DEFAULT_AUTHENTICATION_CLASSES: []`, `AllowAny` |
 | Optimizer | `routing/services.optimize_all`: heurística determinista, con path OSRM/OR-Tools activado por defecto (`ROUTING_OSRM=1`) y fallback heurístico |
 
-Source: `backend/config/settings.py`; `frontend/src/App.tsx`; `.context/product.md` §Stack.
+Source: `backend/config/settings.py`; `frontend/src/App.tsx`; `project-config.md` §Tech Stack.
 
 ## C4 Context
 

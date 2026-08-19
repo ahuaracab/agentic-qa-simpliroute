@@ -1,6 +1,6 @@
 # Infrastructure — Backend (Delivery Route Planner)
 
-> Fase 3 Infrastructure Discovery · Generado: 2026-08-08 · Discovery read-only sobre el target (`C:\laragon\www\route-optimizer\backend`). No se modificó código del target.
+> Fase 3 Infrastructure Discovery · Generado: 2026-08-08 · Discovery read-only sobre el target (`../route-optimizer/backend`). No se modificó código del target.
 > Stack detectado: **Django + DRF** (señales: `backend/requirements.txt` con `Django==5.2.*`, `manage.py`, `config/settings.py`). No hay `pyproject.toml` — package manager = **pip + requirements.txt**.
 > Convención: los identificadores técnicos (paths, env var names, comandos, settings) se mantienen en inglés; el contenido está en español para el equipo QA chileno.
 
@@ -86,7 +86,7 @@ Ninguna variable es estrictamente requerida: el proyecto arranca con todos los d
 | Aspecto | Hallazgo | Evidencia |
 |---------|----------|-----------|
 | Tipo | SQLite (file) | `settings.py:101` (`django.db.backends.sqlite3`) |
-| Provider | Local file — intercambiable por Postgres (documentado en `.context/product.md`) | `project-config.md` §Database |
+| Provider | Local file — intercambiable por Postgres (ver `project-config.md` §Database) | `project-config.md` §Database |
 | Archivos | `backend/db.sqlite3` (dev) | `settings.py:102` |
 | ORM | Django ORM (integrado) | — |
 | Migration tool | Django migrations | `routing/migrations/` (0001 + 0002_optimizationroute_geometry), `vehicles/migrations/` (0001 + 0002), `visits/migrations/` (0001 + 0002) |
@@ -172,7 +172,7 @@ curl http://127.0.0.1:8000/api/vehicles/   # esperado: 200 + lista paginada
 |---------|----------|-----------|
 | Authentication | `DEFAULT_AUTHENTICATION_CLASSES: []` (vacío) | `settings.py:69` |
 | Authorization | `DEFAULT_PERMISSION_CLASSES: ['rest_framework.permissions.AllowAny']` | `settings.py:70-72` |
-| Conclusión | API completamente abierta, sin sesiones/tokens | `SRS/architecture.md` §Security (coincide) |
+| Conclusión | API completamente abierta, sin sesiones/tokens | `SRS/architecture.md` §Security Architecture (coincide) |
 
 ## Discovery Gaps
 

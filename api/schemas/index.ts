@@ -10,7 +10,6 @@
  *   import type { CreateVehicleRequest } from '@schemas';                         // cross-domain
  */
 
+export type * from './optimization.types';
 export type * from './vehicle.types';
-
-// Add new domain facades here:
-// export type * from './visits.types';
+export type * from './visit.types';

@@ -107,7 +107,7 @@ Pseudocódigo `[ISSUE_TRACKER_TOOL]`:
 
 ## Discovery Gaps
 
-- [ ] **Issue tracker inexistente** (`project_key: null`) — el mapeo de backlog (Step 1-3 de phase-4-specification.md) está **diferido por diseño**: se re-ejecuta cuando el usuario adopte un tracker (ver `phase-4-specification.md` §When to re-run). Registrado en `risk-assessment.md` §Blockers.
+- [ ] **Issue tracker inexistente** (`project_key: null`) — el mapeo de backlog (Step 1-3 de phase-4-specification.md) está **diferido por diseño**: se re-ejecuta cuando el usuario adopte un tracker (ver `phase-4-specification.md` §When to re-run). Registrado en `risk-assessment.md` §Discovery Gaps.
 - [ ] Workflow states / transiciones: desconocidos (sin tracker). Diagrama de estados se dibujará cuando exista (validación manual de transición requerida).
 - [ ] Required custom fields / issue types: desconocidos. Enumerar desde create-meta del tracker al adoptarse.
 - [ ] Credenciales: `ATLASSIAN_*` vacías en `.env` — solo se requieren cuando exista tracker. No hay secretos en este archivo.

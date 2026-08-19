@@ -1,16 +1,16 @@
 /**
- * KATA Architecture - Global Setup (Project)
+ * KATA Architecture - Global Setup (Native Hook)
  *
- * Runs FIRST before all other projects.
+ * Runs FIRST before the whole test suite.
  * Prepares the test environment: creates directories, validates config.
  *
- * Dependencies: None (this is the root)
- * Dependents: ui-setup, api-setup
+ * Implemented as a native `globalSetup` hook so it is NOT a test
+ * and does NOT appear in test reports (Allure, HTML, JSON, JUnit).
  */
 
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { test as setup } from '@playwright/test';
+import { ATC_PARTIAL_PATH } from '@utils/decorators';
 import { config, env } from '@variables';
 
 /**
@@ -18,7 +18,7 @@ import { config, env } from '@variables';
  *
  * Creates required directories and validates environment configuration.
  */
-setup('Global Setup: prepare environment', async () => {
+export default async function globalSetup(): Promise<void> {
   console.log(`\n${'='.repeat(60)}`);
   console.log('KATA Architecture - Global Setup');
   console.log('='.repeat(60));
@@ -44,11 +44,28 @@ setup('Global Setup: prepare environment', async () => {
     }
   }
 
+  // Clean previous run artifacts so each run starts from scratch.
+  // allure-playwright APPENDS to allure-results (stale results would mix in),
+  // and @atc storeResult APPENDS to the NDJSON (stale lines would mix in
+  // if a previous run was interrupted before KataReporter.onEnd()).
+  const allureResultsDir = join(process.cwd(), 'allure-results');
+  if (existsSync(allureResultsDir)) {
+    for (const entry of readdirSync(allureResultsDir)) {
+      rmSync(join(allureResultsDir, entry), { recursive: true, force: true });
+    }
+    console.log('[CLEANED] allure-results/');
+  }
+
+  if (existsSync(ATC_PARTIAL_PATH)) {
+    rmSync(ATC_PARTIAL_PATH, { force: true });
+    console.log('[CLEANED] reports/.atc_partial.ndjson (stale ATC results)');
+  }
+
   // Validate TMS configuration if AUTO_SYNC is enabled
   validateTmsConfig();
 
   console.log('[OK] Global setup complete\n');
-});
+}
 
 /**
  * Validates resolved TMS credentials when AUTO_SYNC is enabled.

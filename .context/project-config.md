@@ -7,7 +7,7 @@
 
 | Repository | URL | Branch | Purpose |
 |------------|-----|--------|---------|
-| route-optimizer (monorepo) | local: `C:\laragon\www\route-optimizer` | main | Delivery route planning platform (last-mile) |
+| route-optimizer (monorepo) | local: `../route-optimizer` | main | Delivery route planning platform (last-mile) |
 | backend | `../route-optimizer/backend` | main | Django REST API (vehicles, visits, routing) |
 | frontend | `../route-optimizer/frontend` | main | React + Vite web app consuming the API |
 
@@ -31,7 +31,7 @@
 
 ### Database
 - Type: SQLite (dev: `backend/db.sqlite3`; el e2e usaba `db.e2e.sqlite3`, eliminado 2026-08-08 — el E2E corre desde `agentic-qa-simpliroute`)
-- Provider: local file (interchangeable with Postgres per `.context/product.md`)
+- Provider: local file (interchangeable with Postgres per `project-config.md` §Database)
 - Access: direct file / DBHub MCP not configured yet (`db_mcp: null`)
 
 ### Infrastructure
@@ -54,7 +54,7 @@
 - Issue tracker: **none** — `issue_tracker: null` (user has no Jira; route-optimizer is an example project with no stories)
 - Project key: none
 - Database: direct SQLite file; DBHub MCP pending
-- Docs: target repo `.context/` + `docs/test-plan.md` (in-repo markdown)
+- Docs: `.context/` in this repo (agentic-qa-simpliroute) — PRD, SRS, business maps, master-test-plan, risk-assessment.
 
 ## Access Checklist
 

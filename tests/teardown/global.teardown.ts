@@ -1,16 +1,15 @@
 /**
- * KATA Architecture - Global Teardown (Project)
+ * KATA Architecture - Global Teardown (Native Hook)
  *
- * Runs LAST after all test projects complete.
+ * Runs LAST after the whole test suite completes.
  * Generates reports, syncs to TMS, cleans up resources.
  *
- * Dependencies: e2e, integration (runs after all tests)
- * Dependents: None (this is the final step)
+ * Implemented as a native `globalTeardown` hook so it is NOT a test
+ * and does NOT appear in test reports (Allure, HTML, JSON, JUnit).
  */
 
 import { existsSync, readFileSync } from 'node:fs';
 
-import { test as teardown } from '@playwright/test';
 import { ATC_PARTIAL_PATH } from '@utils/decorators';
 import { syncResults } from '@utils/jiraSync';
 
@@ -19,7 +18,7 @@ import { syncResults } from '@utils/jiraSync';
  *
  * Generates ATC execution report and syncs results to TMS if enabled.
  */
-teardown('Global Teardown: generate reports and sync TMS', async () => {
+export default async function globalTeardown(): Promise<void> {
   console.log(`\n${'='.repeat(60)}`);
   console.log('KATA Architecture - Global Teardown');
   console.log('='.repeat(60));
@@ -100,4 +99,4 @@ teardown('Global Teardown: generate reports and sync TMS', async () => {
   console.log(`\n${'='.repeat(60)}`);
   console.log('[OK] Global teardown complete');
   console.log(`${'='.repeat(60)}\n`);
-});
+}

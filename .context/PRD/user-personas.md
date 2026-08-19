@@ -16,7 +16,7 @@
 ### Identity
 
 - System Role: Configuración y planificación (sin rol de código; rol de intención).
-- Evidence: `frontend/src/components/VehicleForm.tsx`, `VisitForm.tsx`, `VisitImport.tsx`, `RouteOptimizer.tsx`; `.context/product.md` §"Usuarios".
+- Evidence: `frontend/src/components/VehicleForm.tsx`, `VisitForm.tsx`, `VisitImport.tsx`, `RouteOptimizer.tsx`; `PRD/executive-summary.md` §Target Users.
 - Access Level: Full (API abierta).
 - Estimated % of Users: ~50% (la mitad del flujo es entrada de datos + optimización).
 

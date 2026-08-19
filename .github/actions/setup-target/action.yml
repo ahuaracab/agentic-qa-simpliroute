@@ -9,6 +9,10 @@
 # SAME runner/job — tests hit 127.0.0.1:8000 as they do locally.
 #
 # Target repo is public — anonymous checkout works (GITHUB_TOKEN default).
+#
+# ROUTING_OSRM=0: el target por defecto intenta OSRM real (red externa) en cada
+# optimización y degrada a heurística tras 5s. Para determinismo/velocidad en
+# CI se desactiva (misma decisión que el conftest.py del propio target).
 
 name: Setup Target Backend
 description: Clone the route-optimizer target, install backend deps, migrate and start the Django dev server.
@@ -52,23 +56,31 @@ runs:
       working-directory: ${{ inputs.backend-path }}
       run: pip install -r requirements.txt
 
-    - name: Apply Migrations
+    - name: Run Database Migrations
       shell: bash
       working-directory: ${{ inputs.backend-path }}
       run: python manage.py migrate --noinput
 
-    - name: Start Backend Server (background)
+    - name: Start Backend Server
       shell: bash
       working-directory: ${{ inputs.backend-path }}
-      run: |
-        nohup python manage.py runserver 0.0.0.0:8000 > server.log 2>&1 &
-        for i in $(seq 1 60); do
-          if curl -fsS http://127.0.0.1:8000/api/vehicles/ > /dev/null 2>&1; then
-            echo "Backend ready on http://127.0.0.1:8000"
+      env:
+        PYTHONUNBUFFERED: '1'
+        ROUTING_OSRM: '0'
+      run: |-
+        nohup python manage.py runserver 0.0.0.0:8000 --noreload > /tmp/django-server.log 2>&1 &
+        echo "Django runserver started (pid $!)"
+        for i in $(seq 1 30); do
+          if curl -sf http://127.0.0.1:8000/api/vehicles/ -o /dev/null; then
+            echo "Django ready after ${i}s"
             exit 0
           fi
-          sleep 2
+          sleep 1
         done
-        echo "::error::Backend did not become ready within 120s"
-        tail -n 50 server.log || true
+        echo "Django did not become ready in time" >&2
         exit 1
+
+    - name: Upload Server Logs on Failure
+      if: failure()
+      shell: bash
+      run: cat /tmp/django-server.log

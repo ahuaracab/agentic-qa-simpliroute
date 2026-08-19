@@ -465,7 +465,7 @@ Assessment Date: 2026-08-08
 ### Documentation State: Good
 - README: yes
 - API docs: no (no OpenAPI published — Discovery Gap)
-- Architecture: yes (`.context/product.md`, AGENTS.md)
+- Architecture: yes (`.context/SRS/architecture.md`, target `AGENTS.md`)
 - Setup guide: yes (README "Correr el proyecto")
 
 ### Code Quality
@@ -494,7 +494,7 @@ Assessment Date: 2026-08-08
 ### Phase Prioritization
 
 - Phase 1: Normal — stack claro, docs en el target ya buenas
-- Phase 2: Normal — PRD/SRS se derivan de `.context/product.md` + código
+- Phase 2: Normal — PRD/SRS se derivan de `.context/PRD/*` + `.context/SRS/*` + código
 - Phase 3: Normal — backend/frontend bien delimitados, qa.yml como fuente de CI
 - Phase 4: Extended — sin issue tracker; solo templates (backlog mapping = Discovery Gap)
 

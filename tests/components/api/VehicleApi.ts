@@ -128,4 +128,13 @@ export class VehicleApi extends ApiBase {
 
     return [response, body];
   }
+
+  /**
+   * Cleanup helper (sin @atc): DELETE idempotente para limpieza en `finally`.
+   * Tolerante a 404 (el recurso ya pudo ser eliminado por la UI). No registra
+   * resultado en el reporte ATC — el delete verificado es ROUTE-204.
+   */
+  async deleteVehicleByIdForCleanup(vehicleId: number): Promise<void> {
+    await this.apiDELETE(`/vehicles/${vehicleId}/`);
+  }
 }

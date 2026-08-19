@@ -9,7 +9,7 @@
  *   - Import directo: import { DataFactory } from '@DataFactory'
  */
 
-import type { TestCredentials, TestUser, TestVehicle } from './types';
+import type { TestCredentials, TestUser, TestVehicle, TestVisit } from './types';
 
 import { faker } from '@faker-js/faker';
 
@@ -67,38 +67,53 @@ export class DataFactory {
   }
 
   /**
-   * Genera un ID único para identificar datos de test
-   * Útil para cleanup y trazabilidad
-   */
-  static createTestId(prefix = 'test'): string {
-    return `${prefix}-${this.uniqueId()}`;
-  }
-
-  // ============================================
-  // PROJECT-SPECIFIC (Route Optimizer)
-  // ============================================
-
-  /**
-   * Genera un vehículo válido para testing
-   * Contrato real: vehicle.types.ts (VehicleSerializer)
-   * Requeridos en el request: name, latitude, longitude
+   * Genera un vehículo completo para testing
    * @param overrides - Propiedades a sobreescribir
    */
   static createVehicle(overrides?: Partial<TestVehicle>): TestVehicle {
     return {
-      name: `Vehículo ${faker.location.city()} ${this.uniqueId()}`,
-      capacityKg: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
-      capacityL: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
-      averageSpeedKmh: faker.number.float({ min: 20, max: 90, fractionDigits: 1 }),
-      latitude: faker.location.latitude({ max: -33.5, min: -33.6, precision: 5 }),
-      longitude: faker.location.longitude({ max: -70.65, min: -70.7, precision: 5 }),
-      workStart: '08:00',
-      workEnd: '18:00',
-      lunchStart: '13:00',
-      lunchEnd: '14:00',
+      name: `Vehículo ${faker.person.lastName()} ${this.uniqueId()}`,
+      capacity_kg: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
+      capacity_l: faker.number.float({ min: 500, max: 2000, fractionDigits: 2 }),
+      average_speed_kmh: faker.number.float({ min: 30, max: 90, fractionDigits: 1 }),
+      latitude: faker.location.latitude({ max: -33.4, min: -33.6, precision: 5 }),
+      longitude: faker.location.longitude({ max: -70.6, min: -70.8, precision: 5 }),
+      work_start: '08:00',
+      work_end: '18:00',
+      lunch_start: '13:00',
+      lunch_end: '14:00',
       ...overrides,
     };
   }
-}
 
-export default DataFactory;
+  /**
+   * Genera una visita de entrega completa para testing
+   * @param overrides - Propiedades a sobreescribir
+   */
+  static createVisit(overrides?: Partial<TestVisit>): TestVisit {
+    return {
+      name: `Visita ${faker.location.city()} ${this.uniqueId()}`,
+      address: faker.location.streetAddress(),
+      latitude: faker.location.latitude({ max: -33.4, min: -33.6, precision: 5 }),
+      longitude: faker.location.longitude({ max: -70.6, min: -70.8, precision: 5 }),
+      service_time_minutes: faker.number.int({ min: 5, max: 30 }),
+      priority: faker.number.int({ min: 1, max: 10 }),
+      weight_kg: faker.number.float({ min: 1, max: 100, fractionDigits: 2 }),
+      volume_l: faker.number.float({ min: 1, max: 100, fractionDigits: 2 }),
+      time_window_start: null,
+      time_window_end: null,
+      ...overrides,
+    };
+  }
+
+  /**
+   * Genera una fecha de optimización futura (YYYY-MM-DD).
+   * Usar un día futuro evita colisionar con recursos ocupados por runs previos.
+   * @param daysFromToday - días a partir de hoy (default: 1)
+   */
+  static createOptimizationDate(daysFromToday = 1): string {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromToday);
+    return date.toISOString().slice(0, 10);
+  }
+}

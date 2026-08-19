@@ -1,6 +1,6 @@
 # Domain Glossary — route-optimizer (Delivery Route Planner)
 
-> Generated: 2026-08-08 · Fuentes: `backend/{vehicles,visits,routing}/models.py`, `.context/modules/*.md`, `README.md`.
+> Generated: 2026-08-08 · Fuentes: `backend/{vehicles,visits,routing}/models.py`, `business/business-data-map.md`, `README.md`.
 
 ## 1. Core Entities
 
@@ -107,7 +107,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `Vehicle`, `Visit`, `OptimizationRoute`
 - Validation: `_fits_capacity` en `routing/services.py`
 - Error Message: (sin mensaje — la visita simplemente no se asigna, queda en `unassigned`)
-- Found In: `.context/modules/routing.md`, `README.md` l14-18
+- Found In: `business/business-data-map.md` §Narrativa de relaciones clave, `README.md` l14-18
 - Given/When/Then: Given un vehículo con capacidad 100 kg / 200 L, when se intenta asignar una visita de 150 kg, then la visita queda en `unassigned_visits`.
 
 ### BR-2 — Prioridad gobierna la selección
@@ -116,7 +116,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `Visit`, `OptimizationRoute`
 - Validation: `_assign_visits` / `_select_visits`
 - Error Message: —
-- Found In: `.context/modules/routing.md` §Algoritmo
+- Found In: `business/business-data-map.md` §Flujo 3 (selección por prioridad)
 - Given/When/Then: Given capacidad para 2 de 3 visitas con prioridad 3, 2, 1, when se optimiza, then entran las de prioridad 3 y 2.
 
 ### BR-3 — Ventana horaria y jornada
@@ -125,7 +125,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `RouteStop`, `Vehicle`
 - Validation: `_arrival_if_feasible`
 - Error Message: —
-- Found In: `.context/modules/routing.md` §Algoritmo (3)
+- Found In: `business/business-data-map.md` §Flujo 3 (ventana horaria y jornada)
 - Given/When/Then: Given una parada con ventana 09:00-10:00 y llegada estimada 09:30, when se optimiza, then la parada es factible (sin espera si ya pasó 09:00).
 
 ### BR-4 — Vehículo ocupado
@@ -134,7 +134,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `Vehicle`, `OptimizationRoute`
 - Validation: endpoint `GET /api/available/resources/?date=...`
 - Error Message: —
-- Found In: `.context/modules/routing.md` §Ciclo de vida
+- Found In: `business/business-data-map.md` §Máquinas de estado (disponibilidad)
 - Given/When/Then: Given un vehículo con ruta confirmed el 2026-08-10, when se consulta disponibilidad para esa fecha, then el vehículo no aparece.
 
 ### BR-5 — Disponibilidad de visitas
@@ -143,7 +143,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `Visit`, `RouteStop`
 - Validation: disponibilidad en `routing/services.py`
 - Error Message: —
-- Found In: `.context/modules/routing.md` §Ciclo de vida, `.context/modules/visits.md`
+- Found In: `business/business-data-map.md` §Máquinas de estado
 - Given/When/Then: Given una visita con parada delivered, when se consulta disponibilidad cualquier día, then no se ofrece.
 
 ### BR-6 — Import Excel sin abortar
@@ -152,7 +152,7 @@ Found in: `backend/routing/models.py` (`RouteStop.Status`).
 - Entities Affected: `Visit`
 - Validation: `visits/services.py`, endpoint `POST /api/visits/import/`
 - Error Message: `{"created": N, "errors": [{name, errors}]}`
-- Found In: `README.md` l85-86, `.context/modules/visits.md`
+- Found In: `README.md` l85-86, `business/business-data-map.md` §Flujo 2
 - Given/When/Then: Given un Excel con 3 filas (1 inválida), when se importa, then `created == 2` y `errors` contiene la fila inválida.
 
 ### BR-7 — Validaciones de campo (via validators)

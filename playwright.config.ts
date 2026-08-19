@@ -21,6 +21,11 @@ export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.test\.ts/,
 
+  // Global hooks (run once, NOT counted as tests / not shown in Allure):
+  // setup creates dirs and validates env, teardown generates reports + syncs TMS.
+  globalSetup: './tests/setup/global.setup.ts',
+  globalTeardown: './tests/teardown/global.teardown.ts',
+
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
 
@@ -95,16 +100,6 @@ export default defineConfig({
 
   projects: [
     // ============================================
-    // Global Setup - Runs FIRST (creates dirs, validates env)
-    // ============================================
-    {
-      name: 'global-setup',
-      testMatch: /global\.setup\.ts/,
-      testDir: './tests/setup',
-      teardown: 'global-teardown',
-    },
-
-    // ============================================
     // E2E Tests - UI + API (no auth: API pública AllowAny)
     // ============================================
     {
@@ -135,16 +130,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
       },
-    },
-
-    // ============================================
-    // Global Teardown - Runs LAST (reports, TMS sync)
-    // Activated by `teardown` property on global-setup, NOT by dependencies
-    // ============================================
-    {
-      name: 'global-teardown',
-      testMatch: /global\.teardown\.ts/,
-      testDir: './tests/teardown',
     },
 
     // ============================================

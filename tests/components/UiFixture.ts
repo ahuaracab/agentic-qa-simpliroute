@@ -17,13 +17,19 @@
 import type { TestContextOptions } from '@TestContext';
 
 import { UiBase } from '@ui/UiBase';
+import { VehiclePage } from '@ui/VehiclePage';
 
 // ============================================
 // UI Fixture Class
 // ============================================
 
 export class UiFixture extends UiBase {
+  /** Vehicle component - UI flows over the SPA (tabs + formulario + listado) */
+  readonly vehicle: VehiclePage;
+
   constructor(options: TestContextOptions) {
     super(options);
+
+    this.vehicle = new VehiclePage(options);
   }
 }

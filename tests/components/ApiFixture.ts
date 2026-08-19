@@ -17,7 +17,9 @@
 import type { TestContextOptions } from '@TestContext';
 
 import { ApiBase } from '@api/ApiBase';
+import { OptimizationApi } from '@api/OptimizationApi';
 import { VehicleApi } from '@api/VehicleApi';
+import { VisitApi } from '@api/VisitApi';
 
 // ============================================
 // API Fixture Class
@@ -27,10 +29,18 @@ export class ApiFixture extends ApiBase {
   /** Vehicle component - CRUD against the public /vehicles/ API */
   readonly vehicle: VehicleApi;
 
+  /** Visit component - CRUD against the public /visits/ API */
+  readonly visit: VisitApi;
+
+  /** Optimization component - CORE: planes, transiciones de estado y recursos */
+  readonly optimization: OptimizationApi;
+
   constructor(options: TestContextOptions) {
     super(options);
 
     // All components receive the same options (same request context)
     this.vehicle = new VehicleApi(options);
+    this.visit = new VisitApi(options);
+    this.optimization = new OptimizationApi(options);
   }
 }
