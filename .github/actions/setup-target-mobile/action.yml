@@ -3,8 +3,6 @@
 # ============================================
 # Clones the mobile-demo repo, builds the release APK and places it where
 # test:mobile:install expects it (tests/mobile/apk/app-release.apk).
-# The APK is cached so subsequent runs skip the Gradle build when the
-# mobile-demo source hasn't changed.
 
 name: Setup Target Mobile (Build APK)
 description: >
@@ -32,24 +30,11 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Mobile Demo Repo
-      uses: actions/checkout@v4
-      with:
-        repository: ${{ inputs.repo }}
-        ref: ${{ inputs.ref }}
-        path: mobile-demo
-        fetch-depth: 1
-
-    - name: Cache Gradle Build
-      uses: actions/cache@v4
-      with:
-        path: |
-          mobile-demo/android/.gradle
-          mobile-demo/android/app/build
-        key: gradle-${{ inputs.ref }}-${{ hashFiles('mobile-demo/android/**/*.gradle*') }}
-        restore-keys: |
-          gradle-${{ inputs.ref }}-
-          gradle-
+    - name: Clone Mobile Demo Repo
+      shell: bash
+      run: |
+        git clone --depth 1 --branch ${{ inputs.ref }} \
+          https://github.com/${{ inputs.repo }}.git mobile-demo
 
     - name: Setup Java ${{ inputs.java-version }}
       uses: actions/setup-java@v4
