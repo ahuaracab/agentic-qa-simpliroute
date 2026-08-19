@@ -165,7 +165,13 @@ jobs:
           profile: pixel_6
           script: |
             adb install -r tests/mobile/apk/app-release.apk
-            echo "APK installed, running Maestro tests..."
+            echo "APK installed, launching app..."
+            adb shell am start -n com.anonymous.mobiledemo/.MainActivity
+            sleep 5
+            echo "Capturing logcat for debugging..."
+            adb logcat -d -s ReactNativeJS:E *:W | tail -100 > /tmp/logcat-pre-test.txt
+            adb exec-out screencap -p > /tmp/screenshot-pre-test.png || true
+            echo "Running Maestro tests..."
             maestro test tests/mobile/.maestro/
 
       - name: Upload Test Artifacts
@@ -173,5 +179,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: maestro-test-results
-          path: ~/.maestro/tests/
+          path: |
+            ~/.maestro/tests/
+            /tmp/logcat-pre-test.txt
+            /tmp/screenshot-pre-test.png
           retention-days: 14

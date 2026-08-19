@@ -2,8 +2,7 @@ appId: com.anonymous.mobiledemo
 ---
 - launchApp
 - extendedWaitUntil:
-    visible:
-      id: main-title
+    visible: Demo E2E Mobile
     timeout: 30000
 
 # Test 1: Verify main title
@@ -11,10 +10,6 @@ appId: com.anonymous.mobiledemo
     id: main-title
 
 # Test 2: Greeting flow
-- extendedWaitUntil:
-    visible:
-      id: name-input
-    timeout: 10000
 - tapOn:
     id: name-input
 - inputText: Tester
